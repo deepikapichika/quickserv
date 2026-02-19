@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Provider Dashboard - QuickServ</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="container dashboard">
+  <div class="dashboard-header">
+    <div class="user-info">
+      <div class="user-avatar">
+        <span th:text="${user.name.substring(0,1)}"></span>
+      </div>
+      <div class="user-details">
+        <h3>Welcome, <span th:text="${user.name}"></span>!</h3>
+        <p><i class="fas fa-user-tag"></i> <span th:text="${user.role}"></span> Account</p>
+      </div>
+    </div>
+    <a href="/logout" class="btn btn-danger">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </a>
+  </div>
+
+  <h2>My Services Dashboard</h2>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">
+        <span>📋</span>
+      </div>
+      <h3>Active Listings</h3>
+      <p>3 services currently active</p>
+      <button class="btn btn-success" style="margin-top: 15px;">Manage</button>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">
+        <span>📅</span>
+      </div>
+      <h3>Today's Bookings</h3>
+      <p>2 appointments scheduled</p>
+      <button class="btn btn-success" style="margin-top: 15px;">View</button>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">
+        <span>⭐</span>
+      </div>
+      <h3>Reviews</h3>
+      <p>4.8 ★ (24 reviews)</p>
+      <button class="btn btn-success" style="margin-top: 15px;">See All</button>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">
+        <span>💰</span>
+      </div>
+      <h3>Earnings</h3>
+      <p>₹15,450 this month</p>
+      <button class="btn btn-success" style="margin-top: 15px;">Details</button>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" style="margin-top: 30px;">
+    <i class="fas fa-plus-circle"></i> Add New Service
+  </button>
+</div>
+</body>
+</html>
