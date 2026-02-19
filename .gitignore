@@ -1,33 +1,23 @@
-HELP.md
+# Compiled files
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+*.class
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# IDE files
+.idea/
 *.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
 .vscode/
+
+# Logs
+logs/
+*.log
+
+# Database files
+*.db
+*.sqlite
+
+# Application properties (if you have passwords)
+# application.properties  (ONLY uncomment if you want to hide your DB password)
+
+# Maven wrapper
+mvnw
+mvnw.cmd
