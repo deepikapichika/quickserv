@@ -34,7 +34,8 @@
       </div>
       <h3>Active Listings</h3>
       <p>3 services currently active</p>
-      <button class="btn btn-success" style="margin-top: 15px;">Manage</button>
+      <!-- CHANGED: button → a with correct link -->
+      <a href="/provider/services" class="btn btn-success" style="margin-top: 15px;">Manage</a>
     </div>
 
     <div class="card">
@@ -43,7 +44,8 @@
       </div>
       <h3>Today's Bookings</h3>
       <p>2 appointments scheduled</p>
-      <button class="btn btn-success" style="margin-top: 15px;">View</button>
+      <!-- CHANGED: button → a (placeholder for now) -->
+      <a href="#" class="btn btn-success" style="margin-top: 15px;">View</a>
     </div>
 
     <div class="card">
@@ -52,7 +54,8 @@
       </div>
       <h3>Reviews</h3>
       <p>4.8 ★ (24 reviews)</p>
-      <button class="btn btn-success" style="margin-top: 15px;">See All</button>
+      <!-- CHANGED: button → a (placeholder for now) -->
+      <a href="#" class="btn btn-success" style="margin-top: 15px;">See All</a>
     </div>
 
     <div class="card">
@@ -61,13 +64,24 @@
       </div>
       <h3>Earnings</h3>
       <p>₹15,450 this month</p>
-      <button class="btn btn-success" style="margin-top: 15px;">Details</button>
+      <!-- CHANGED: button → a (placeholder for now) -->
+      <a href="#" class="btn btn-success" style="margin-top: 15px;">Details</a>
     </div>
   </div>
 
-  <button class="btn btn-primary" style="margin-top: 30px;">
-    <i class="fas fa-plus-circle"></i> Add New Service
-  </button>
+  <!-- CHANGED: button → a with correct link -->
+  <div style="margin-top: 30px; text-align: center;">
+    <a href="/provider/services/new" class="btn btn-primary">
+      <i class="fas fa-plus-circle"></i> Add New Service
+    </a>
+  </div>
+
+  <!-- ADDED: Browse Services button for quick access -->
+  <div style="margin-top: 15px; text-align: center;">
+    <a href="/browse" class="btn btn-secondary">
+      <i class="fas fa-search"></i> Browse Services (Customer View)
+    </a>
+  </div>
 </div>
 </body>
 </html>

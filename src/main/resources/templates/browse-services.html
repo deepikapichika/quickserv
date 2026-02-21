@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Services - QuickServ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-bolt"></i> QuickServ
+        </a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="/customer/dashboard">Dashboard</a>
+            <a href="/logout" class="btn btn-danger btn-sm ms-2">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container dashboard" style="margin-top: 30px;">
+    <h2>Find Local Services</h2>
+
+    <!-- Search & Filter Section -->
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+        <form action="/browse" method="get" class="row g-3">
+            <div class="col-md-5">
+                <input type="text" name="search" class="form-control"
+                       placeholder="Search services..." th:value="${searchKeyword}">
+            </div>
+            <div class="col-md-4">
+                <select name="categoryId" class="form-control">
+                    <option value="">All Categories</option>
+                    <option th:each="cat : ${categories}"
+                            th:value="${cat.id}"
+                            th:text="${cat.name} + ' ' + ${cat.iconUrl}"
+                            th:selected="${selectedCategory == cat.id}"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Services Grid -->
+    <div class="card-grid" th:if="${not #lists.isEmpty(services)}">
+        <div class="card" th:each="service : ${services}">
+            <div class="card-icon">
+                <span th:text="${service.category.iconUrl}">🔧</span>
+            </div>
+            <h3 th:text="${service.title}">Service Title</h3>
+            <p th:text="${service.description}">Description</p>
+            <p><strong>Price:</strong> ₹<span th:text="${service.price}"></span> <span th:text="${service.priceUnit}"></span></p>
+            <p><strong>Provider:</strong> <span th:text="${service.provider.name}"></span></p>
+            <p><strong>Location:</strong> <span th:text="${service.location}"></span></p>
+            <a th:href="@{'/service/' + ${service.id}}" class="btn btn-primary">View Details</a>
+        </div>
+    </div>
+
+    <!-- Empty state -->
+    <div th:unless="${not #lists.isEmpty(services)}" class="text-center" style="padding: 50px;">
+        <h3>No services found</h3>
+        <p>Try adjusting your search or check back later</p>
+    </div>
+</div>
+</body>
+</html>

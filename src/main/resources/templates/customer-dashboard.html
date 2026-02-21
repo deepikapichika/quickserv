@@ -25,40 +25,48 @@
         </a>
     </div>
 
-    <h2>Find Local Services</h2>
+    <!-- ADDED: Browse All Services button -->
+    <div style="margin: 20px 0 30px; text-align: center;">
+        <a href="/browse" class="btn btn-primary" style="padding: 12px 40px; font-size: 16px;">
+            <i class="fas fa-search"></i> Browse All Services
+        </a>
+    </div>
 
-    <div class="card-grid">
-        <div class="card">
-            <div class="card-icon">
-                <span>🔧</span>
-            </div>
-            <h3>Plumbing</h3>
-            <p>Find expert plumbers near you for repairs and installations</p>
-        </div>
+    <h2>Popular Categories</h2>
 
-        <div class="card">
+    <!-- CHANGED: Dynamic categories from database with working links -->
+    <div class="card-grid" th:if="${not #lists.isEmpty(categories)}">
+        <div class="card" th:each="category : ${categories}">
             <div class="card-icon">
-                <span>⚡</span>
+                <span th:text="${category.iconUrl}">🔧</span>
             </div>
-            <h3>Electrical</h3>
-            <p>Certified electricians for all your electrical needs</p>
+            <h3 th:text="${category.name}">Plumbing</h3>
+            <p th:text="${category.description}">Description</p>
+            <a th:href="@{'/browse?categoryId=' + ${category.id}}" class="btn btn-primary" style="margin-top: 15px;">
+                Browse <span th:text="${category.name}"></span>
+            </a>
         </div>
+    </div>
 
-        <div class="card">
-            <div class="card-icon">
-                <span>🧹</span>
-            </div>
-            <h3>Cleaning</h3>
-            <p>Professional cleaning services for home and office</p>
-        </div>
+    <!-- ADDED: Recent Services Section -->
+    <h2 style="margin-top: 40px;">Recent Services</h2>
 
-        <div class="card">
+    <div class="card-grid" th:if="${not #lists.isEmpty(recentServices)}">
+        <div class="card" th:each="service : ${recentServices}">
             <div class="card-icon">
-                <span>🎨</span>
+                <span th:text="${service.category.iconUrl}">🔧</span>
             </div>
-            <h3>Painting</h3>
-            <p>Expert painters to transform your space</p>
+            <h3 th:text="${service.title}">Service Title</h3>
+            <p th:text="${service.description}">Description</p>
+            <p><strong>Price:</strong> ₹<span th:text="${service.price}"></span> <span th:text="${service.priceUnit}"></span></p>
+            <p><strong>Provider:</strong> <span th:text="${service.provider.name}"></span></p>
+            <a th:href="@{'/service/' + ${service.id}}" class="btn btn-primary" style="margin-top: 15px;">View Details</a>
         </div>
+    </div>
+
+    <!-- Show message if no recent services -->
+    <div th:unless="${not #lists.isEmpty(recentServices)}" class="alert alert-info" style="margin-top: 20px;">
+        No services available yet. Check back later!
     </div>
 </div>
 </body>
