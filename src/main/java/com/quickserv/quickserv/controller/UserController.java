@@ -12,6 +12,11 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @GetMapping("/register")
+    public String showRegisterForm(Model model) {
+        model.addAttribute("user", new User());  // Empty user object for form binding
+        return "register";  // This looks for register.html
+    }
 
     @PostMapping("/register")
     public String registerUser(@ModelAttribute User user, Model model) {
@@ -20,7 +25,7 @@ public class UserController {
             return "redirect:/login";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
-            return "hello";  // Back to registration form with error
+            return "register";  // Back to registration form with error
         }
     }
 

@@ -6,64 +6,440 @@
   <title>My Services - QuickServ</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #10002B;
+      min-height: 100vh;
+      padding-top: 80px;
+    }
+
+    /* Background image */
+    .background-img {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      z-index: -1;
+      opacity: 0.2;
+      pointer-events: none;
+    }
+
+    /* Navbar - matching provider dashboard */
+    .navbar {
+      background: rgba(16, 0, 43, 0.95) !important;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(224, 170, 255, 0.2);
+      padding: 15px 0;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 50px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .logo {
+      color: white;
+      text-decoration: none;
+      font-size: 24px;
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(224, 170, 255, 0.5);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 500;
+      transition: color 0.3s;
+      padding: 8px 0;
+    }
+
+    .nav-links a:hover {
+      color: #E0AAFF;
+    }
+
+    .nav-links .logout-link {
+      background: none;
+      padding: 8px 0;
+      margin: 0;
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 0 50px 50px;
+      max-width: 1400px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Page Header */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .page-header h1 {
+      color: #E0AAFF;
+      font-size: 32px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .btn-add {
+      background: linear-gradient(135deg, #5A189A, #7B2CBF);
+      color: white;
+      padding: 12px 25px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+
+    .btn-add:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(123, 44, 191, 0.5);
+    }
+
+    /* Services Grid */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 25px;
+      margin-top: 20px;
+    }
+
+    .service-card {
+      background: rgba(22, 0, 50, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(224, 170, 255, 0.2);
+      border-radius: 15px;
+      overflow: hidden;
+      transition: all 0.3s;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .service-card:hover {
+      transform: translateY(-5px);
+      border-color: #7B2CBF;
+      box-shadow: 0 10px 30px rgba(123, 44, 191, 0.3);
+    }
+
+    .service-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(224, 170, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .service-icon {
+      width: 50px;
+      height: 50px;
+      background: rgba(123, 44, 191, 0.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: #E0AAFF;
+    }
+
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-available {
+      background: rgba(0, 255, 0, 0.15);
+      color: #90EE90;
+      border: 1px solid #00FF00;
+    }
+
+    .status-unavailable {
+      background: rgba(220, 53, 69, 0.15);
+      color: #ff9999;
+      border: 1px solid #dc3545;
+    }
+
+    .service-content {
+      padding: 20px;
+      flex: 1;
+    }
+
+    .service-title {
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .service-description {
+      color: rgba(224, 170, 255, 0.7);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    .service-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .detail-item {
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .detail-label {
+      color: rgba(224, 170, 255, 0.5);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .detail-value {
+      color: #E0AAFF;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .service-actions {
+      display: flex;
+      gap: 10px;
+      padding: 20px;
+      border-top: 1px solid rgba(224, 170, 255, 0.1);
+    }
+
+    .btn-toggle {
+      background: rgba(224, 170, 255, 0.2);
+      border: 1px solid #7B2CBF;
+      color: #E0AAFF;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.3s;
+      flex: 1;
+      text-align: center;
+    }
+
+    .btn-toggle:hover {
+      background: rgba(123, 44, 191, 0.3);
+      color: white;
+    }
+
+    .btn-delete {
+      background: rgba(220, 53, 69, 0.2);
+      border: 1px solid #dc3545;
+      color: #ff9999;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.3s;
+      flex: 1;
+      text-align: center;
+    }
+
+    .btn-delete:hover {
+      background: rgba(220, 53, 69, 0.3);
+      color: #ffcccc;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px;
+      background: rgba(22, 0, 50, 0.9);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      border: 1px solid rgba(224, 170, 255, 0.2);
+    }
+
+    .empty-state i {
+      font-size: 64px;
+      color: #E0AAFF;
+      opacity: 0.5;
+      margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+      color: white;
+      margin-bottom: 10px;
+    }
+
+    .empty-state p {
+      color: rgba(224, 170, 255, 0.7);
+      margin-bottom: 20px;
+    }
+
+    .empty-state .btn-add {
+      display: inline-flex;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-container {
+        padding: 0 20px;
+      }
+
+      .nav-links {
+        gap: 20px;
+      }
+
+      .nav-links a {
+        font-size: 14px;
+      }
+
+      .main-content {
+        padding: 0 20px 30px;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .services-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .service-details {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .service-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
 <body>
-<!-- Navigation -->
-<nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-  <div class="container">
-    <a class="navbar-brand" href="/">
-      <i class="fas fa-bolt"></i> QuickServ
-    </a>
-    <div class="navbar-nav ms-auto">
-      <a class="nav-link" href="/provider/dashboard">Dashboard</a>
-      <a href="/logout" class="btn btn-danger btn-sm ms-2">
-        <i class="fas fa-sign-out-alt"></i> Logout
-      </a>
+<!-- Background Image -->
+<img src="https://images.unsplash.com/photo-1528756514091-dee5ecaa3278?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+class="background-img" alt="Background">
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="/" class="logo">QuickServ</a>
+    <div class="nav-links">
+      <a href="/provider/services">My Services</a>
+      <a href="/provider/dashboard">Dashboard</a>
+      <a href="/browse">Browse</a>
+      <a href="/logout" class="logout-link">Logout</a>
     </div>
   </div>
 </nav>
 
-<div class="container dashboard" style="margin-top: 30px;">
-  <div class="dashboard-header">
-    <h2>My Services</h2>
-    <a href="/provider/services/new" class="btn btn-primary">
-      <i class="fas fa-plus"></i> Add New Service
+<!-- Main Content -->
+<div class="main-content">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>My Services</h1>
+    <a href="/provider/services/new" class="btn-add">
+      <i class="fas fa-plus-circle"></i> Add New Service
     </a>
   </div>
 
   <!-- Services Grid -->
-  <div class="card-grid" th:if="${not #lists.isEmpty(services)}">
-    <div class="card" th:each="service : ${services}">
-      <div style="display: flex; justify-content: space-between;">
-        <div class="card-icon">
-          <span th:text="${service.category.iconUrl}">🔧</span>
-        </div>
-        <span class="badge" th:classappend="${service.isAvailable} ? 'bg-success' : 'bg-secondary'"
+  <div class="services-grid" th:if="${not #lists.isEmpty(services)}">
+    <div class="service-card" th:each="service : ${services}">
+      <!-- Header with Icon and Status -->
+      <div class="service-header">
+        <div class="service-icon" th:text="${service.category.iconUrl}">🔧</div>
+        <span class="status-badge"
+              th:classappend="${service.isAvailable} ? 'status-available' : 'status-unavailable'"
               th:text="${service.isAvailable} ? 'Available' : 'Unavailable'"></span>
       </div>
-      <h3 th:text="${service.title}">Service Title</h3>
-      <p th:text="${service.description}">Description</p>
-      <p><strong>Price:</strong> ₹<span th:text="${service.price}"></span> <span th:text="${service.priceUnit}"></span></p>
-      <p><strong>Category:</strong> <span th:text="${service.category.name}"></span></p>
-      <p><strong>Location:</strong> <span th:text="${service.location}"></span></p>
-      <div style="display: flex; gap: 10px; margin-top: 15px;">
+
+      <!-- Content -->
+      <div class="service-content">
+        <h3 class="service-title" th:text="${service.title}">Service Title</h3>
+        <p class="service-description" th:text="${service.description}">Description goes here</p>
+
+        <div class="service-details">
+          <div class="detail-item">
+            <div class="detail-label">Price</div>
+            <div class="detail-value">
+              ₹<span th:text="${service.price}"></span> <span th:text="${service.priceUnit}"></span>
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Category</div>
+            <div class="detail-value" th:text="${service.category.name}">Category</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Location</div>
+            <div class="detail-value" th:text="${service.location}">Location</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="service-actions">
         <a th:href="@{'/provider/services/toggle/' + ${service.id}}"
-           class="btn btn-sm"
-           th:classappend="${service.isAvailable} ? 'btn-warning' : 'btn-success'"
+           class="btn-toggle"
            th:text="${service.isAvailable} ? 'Mark Unavailable' : 'Mark Available'"></a>
         <a th:href="@{'/provider/services/delete/' + ${service.id}}"
-           class="btn btn-sm btn-danger"
+           class="btn-delete"
            onclick="return confirm('Are you sure you want to delete this service?')">Delete</a>
       </div>
     </div>
   </div>
 
-  <!-- Empty state -->
-  <div th:unless="${not #lists.isEmpty(services)}" class="text-center" style="padding: 50px;">
+  <!-- Empty State -->
+  <div class="empty-state" th:unless="${not #lists.isEmpty(services)}">
+    <i class="fas fa-tools"></i>
     <h3>No services added yet</h3>
-    <p>Click the button above to add your first service!</p>
+    <p>Start by adding your first service to attract customers</p>
+    <a href="/provider/services/new" class="btn-add">
+      <i class="fas fa-plus-circle"></i> Add Your First Service
+    </a>
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
