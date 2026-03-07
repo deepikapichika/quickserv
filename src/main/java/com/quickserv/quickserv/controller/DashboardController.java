@@ -5,6 +5,7 @@ import com.quickserv.quickserv.entity.Category;
 import com.quickserv.quickserv.entity.ServiceListing;
 import com.quickserv.quickserv.service.CategoryService;
 import com.quickserv.quickserv.service.ServiceService;
+import com.quickserv.quickserv.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,6 +22,9 @@ public class DashboardController {
 
     @Autowired
     private ServiceService serviceService;
+
+    @Autowired
+    private BookingService bookingService;
 
     @GetMapping("/customer/dashboard")
     public String customerDashboard(HttpSession session, Model model) {
@@ -66,6 +70,10 @@ public class DashboardController {
             recentServices = recentServices.subList(0, 3);
         }
         model.addAttribute("recentServices", recentServices);
+
+        // Get booking statistics
+        BookingService.BookingStats bookingStats = bookingService.getBookingStats(user);
+        model.addAttribute("bookingStats", bookingStats);
 
         model.addAttribute("user", user);
         return "provider-dashboard";

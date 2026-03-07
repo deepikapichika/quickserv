@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuickServ - Local Services at Your Doorstep</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -26,6 +27,38 @@
         <div class="hero-text">
             <h1>Find Trusted Local<br>Services at Your Doorstep</h1>
             <p>From plumbing to beauty, QuickServ connects you with verified professionals in your area. Fast, reliable, and secure.</p>
+
+            <!-- Search Form -->
+            <div class="search-form">
+                <form action="/services/search" method="get">
+                    <div class="search-container">
+                        <div class="search-wrapper">
+                            <div class="search-field location-field">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <input type="text" name="location" placeholder="Enter your location" required>
+                            </div>
+
+                            <div class="search-field category-field">
+                                <i class="fas fa-tools"></i>
+                                <select name="categoryId">
+                                    <option value="">All Services</option>
+                                    <option value="1">Electrician</option>
+                                    <option value="2">Plumber</option>
+                                    <option value="3">AC Repair</option>
+                                    <option value="4">Beautician</option>
+                                    <option value="5">Tutor</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="search-btn">
+                                <i class="fas fa-search"></i>
+                                <span>Search</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
             <div class="hero-buttons">
                 <a href="/register" class="btn-primary">GET STARTED</a>
                 <a href="#services" class="btn-secondary">LEARN MORE</a>

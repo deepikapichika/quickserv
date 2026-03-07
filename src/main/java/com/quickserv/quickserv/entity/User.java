@@ -13,10 +13,21 @@ public class User {
     private String name;
     private String email;
     private String password;
+    private String phone;
     private String role;
+    private String location;
 
     // Constructors
     public User() {
+    }
+
+    public User(String name, String email, String password, String phone, String role, String location) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.phone = phone;
+        this.role = role;
+        this.location = location;
     }
 
     public User(String name, String email, String password, String role) {
@@ -56,12 +67,27 @@ public class User {
         this.password = password;
     }
 
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
     public String getRole() {
         return role;
     }
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }//will automatically creates a table by spring,id,name,email,password,role,Role will store,CUSTOMER,service,Admin
 }
-

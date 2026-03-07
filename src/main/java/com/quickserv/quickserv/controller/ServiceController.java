@@ -1,16 +1,20 @@
 package com.quickserv.quickserv.controller;
 
+import com.quickserv.quickserv.entity.Booking;
 import com.quickserv.quickserv.entity.Category;
 import com.quickserv.quickserv.entity.ServiceListing;
 import com.quickserv.quickserv.entity.User;
+import com.quickserv.quickserv.service.BookingService;
 import com.quickserv.quickserv.service.CategoryService;
 import com.quickserv.quickserv.service.ServiceService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
@@ -21,6 +25,9 @@ public class ServiceController {
 
     @Autowired
     private CategoryService categoryService;
+
+    @Autowired
+    private BookingService bookingService;
 
     // ============= PROVIDER SECTION =============
 
@@ -162,5 +169,89 @@ public class ServiceController {
         model.addAttribute("service", service);
         model.addAttribute("user", user);
         return "service-detail";
+    }
+
+    // ============= BOOKING SECTION =============
+
+    // Create a booking (Customer)
+    @PostMapping("/service/{id}/book")
+    public String createBooking(@PathVariable Long id,
+                               @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime bookingDateTime,
+                               @RequestParam(required = false) String notes,
+                               HttpSession session,
+                               Model model) {
+        User customer = (User) session.getAttribute("loggedInUser");
+        if (customer == null || !"CUSTOMER".equals(customer.getRole())) {
+            return "redirect:/login";
+        }
+
+        ServiceListing service = serviceService.getServiceById(id);
+        if (service == null || !service.getIsAvailable()) {
+            model.addAttribute("error", "Service not available");
+            return "redirect:/service/" + id;
+        }
+
+        try {
+            Booking booking = bookingService.createBooking(customer, service, bookingDateTime, notes);
+            model.addAttribute("success", "Booking created successfully!");
+            return "redirect:/customer/bookings";
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+            return "redirect:/service/" + id;
+        }
+    }
+
+    // Show provider bookings
+    @GetMapping("/provider/bookings")
+    public String showProviderBookings(HttpSession session, Model model) {
+        User provider = (User) session.getAttribute("loggedInUser");
+        if (provider == null || !"PROVIDER".equals(provider.getRole())) {
+            return "redirect:/login";
+        }
+
+        List<Booking> bookings = bookingService.getProviderBookings(provider);
+        BookingService.BookingStats stats = bookingService.getBookingStats(provider);
+
+        model.addAttribute("bookings", bookings);
+        model.addAttribute("stats", stats);
+        return "provider-bookings";
+    }
+
+    // Update booking status (Provider)
+    @PostMapping("/provider/booking/{id}/status")
+    public String updateBookingStatus(@PathVariable Long id,
+                                     @RequestParam Booking.BookingStatus status,
+                                     HttpSession session) {
+        User provider = (User) session.getAttribute("loggedInUser");
+        if (provider == null || !"PROVIDER".equals(provider.getRole())) {
+            return "redirect:/login";
+        }
+
+        try {
+            bookingService.updateBookingStatus(id, status, provider);
+        } catch (RuntimeException e) {
+            // Handle error
+        }
+
+        return "redirect:/provider/bookings";
+    }
+
+    // Add provider notes to booking
+    @PostMapping("/provider/booking/{id}/notes")
+    public String addProviderNotes(@PathVariable Long id,
+                                  @RequestParam String notes,
+                                  HttpSession session) {
+        User provider = (User) session.getAttribute("loggedInUser");
+        if (provider == null || !"PROVIDER".equals(provider.getRole())) {
+            return "redirect:/login";
+        }
+
+        try {
+            bookingService.addProviderNotes(id, notes, provider);
+        } catch (RuntimeException e) {
+            // Handle error
+        }
+
+        return "redirect:/provider/bookings";
     }
 }

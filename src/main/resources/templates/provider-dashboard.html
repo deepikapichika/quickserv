@@ -197,7 +197,7 @@
     /* Stats Grid */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 20px;
       margin-bottom: 40px;
     }
@@ -588,8 +588,15 @@ class="background-img" alt="Background">
     <div class="stat-card">
       <div class="stat-icon">📅</div>
       <h3>Today's Bookings</h3>
-      <div class="stat-number">2</div>
-      <a href="#" class="btn">View</a>
+      <div class="stat-number" th:text="${bookingStats.todaysBookings}">0</div>
+      <a href="/provider/bookings" class="btn">View</a>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">⏳</div>
+      <h3>Pending Bookings</h3>
+      <div class="stat-number" th:text="${bookingStats.pendingBookings}">0</div>
+      <a href="/provider/bookings" class="btn">Manage</a>
     </div>
 
     <div class="stat-card">
