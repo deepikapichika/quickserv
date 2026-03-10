@@ -30,4 +30,7 @@ public interface ServiceRepository extends JpaRepository<ServiceListing, Long> {
             "LOWER(s.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(s.description) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<ServiceListing> searchServices(@Param("keyword") String keyword);
+
+    // Used by demo seeding to avoid creating duplicate listings on restart.
+    boolean existsByProviderAndTitle(User provider, String title);
 }

@@ -138,6 +138,31 @@
             font-size: 18px;
         }
 
+        .password-field {
+            padding-right: 90px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 6px;
+        }
+
+        .password-toggle:hover,
+        .password-toggle:focus {
+            background: rgba(255, 255, 255, 0.15);
+            outline: none;
+        }
+
         .checkbox-group {
             display: flex;
             justify-content: space-between;
@@ -264,6 +289,10 @@
         You've been logged out successfully!
     </div>
 
+    <div th:if="${param.resetSuccess}" class="alert alert-success">
+        Password reset successful. Please log in with your new password.
+    </div>
+
     <!-- Error message -->
     <div th:if="${error}" class="alert alert-danger" th:text="${error}">
         Invalid credentials
@@ -282,7 +311,13 @@
             <label>Password</label>
             <div class="input-wrapper">
                 <span class="input-icon">🔒</span>
-                <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+                <input type="password"
+                       id="passwordInput"
+                       name="password"
+                       class="form-control password-field"
+                       placeholder="Enter your password"
+                       required>
+                <button type="button" id="togglePasswordBtn" class="password-toggle" aria-label="Show password">Show</button>
             </div>
         </div>
 
@@ -290,7 +325,7 @@
             <label>
                 <input type="checkbox" name="remember"> Remember me
             </label>
-            <a href="#" class="forgot-link">Forgot password?</a>
+            <a href="/forgot-password" class="forgot-link">Forgot password?</a>
         </div>
 
         <button type="submit" class="btn-login">Login</button>
@@ -300,5 +335,18 @@
         Don't have an account? <a href="/register">Register</a>
     </p>
 </div>
+<script>
+    const passwordInput = document.getElementById('passwordInput');
+    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+
+    if (passwordInput && togglePasswordBtn) {
+        togglePasswordBtn.addEventListener('click', function () {
+            const showingPassword = passwordInput.type === 'text';
+            passwordInput.type = showingPassword ? 'password' : 'text';
+            togglePasswordBtn.textContent = showingPassword ? 'Show' : 'Hide';
+            togglePasswordBtn.setAttribute('aria-label', showingPassword ? 'Show password' : 'Hide password');
+        });
+    }
+</script>
 </body>
 </html>

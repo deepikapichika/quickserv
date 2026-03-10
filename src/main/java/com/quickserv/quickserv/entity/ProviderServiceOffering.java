@@ -4,43 +4,40 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * ProviderServiceOffering: Links a provider with a specific sub-service and individual pricing.
+ * This allows providers to offer multiple sub-services (e.g., Hair Cut, Hair Spa, Facial)
+ * under their main service category, each with different pricing.
+ */
 @Entity
-@Table(name = "services")
-public class ServiceListing {
+@Table(name = "provider_service_offerings", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"provider_id", "sub_service_id"})
+})
+public class ProviderServiceOffering {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String title;
-
-    @Column(length = 1000)
-    private String description;
-
-    // Relationship: Many services belong to ONE provider
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "provider_id", nullable = false)
     private User provider;
 
-    // Relationship: Many services belong to ONE category
-    @ManyToOne
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "sub_service_id", nullable = false)
+    private SubService subService;
 
+    @Column(nullable = false)
     private BigDecimal price;
 
+    @Column(nullable = false)
     private String priceUnit; // "per hour", "per visit", "fixed"
 
-    private String location;
-
-    private String imageUrl;
-
-    private Integer durationMinutes;
-
-    private Boolean isCustomService = false;
-
+    @Column(nullable = false)
     private Boolean isAvailable = true;
+
+    @Column(length = 1000)
+    private String description;
 
     private LocalDateTime createdAt;
 
@@ -58,23 +55,25 @@ public class ServiceListing {
     }
 
     // Constructors
-    public ServiceListing() {}
+    public ProviderServiceOffering() {}
+
+    public ProviderServiceOffering(User provider, SubService subService, BigDecimal price, String priceUnit) {
+        this.provider = provider;
+        this.subService = subService;
+        this.price = price;
+        this.priceUnit = priceUnit;
+        this.isAvailable = true;
+    }
 
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
     public User getProvider() { return provider; }
     public void setProvider(User provider) { this.provider = provider; }
 
-    public Category getCategory() { return category; }
-    public void setCategory(Category category) { this.category = category; }
+    public SubService getSubService() { return subService; }
+    public void setSubService(SubService subService) { this.subService = subService; }
 
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
@@ -82,20 +81,11 @@ public class ServiceListing {
     public String getPriceUnit() { return priceUnit; }
     public void setPriceUnit(String priceUnit) { this.priceUnit = priceUnit; }
 
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
-
-    public String getImageUrl() { return imageUrl; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-
-    public Integer getDurationMinutes() { return durationMinutes; }
-    public void setDurationMinutes(Integer durationMinutes) { this.durationMinutes = durationMinutes; }
-
-    public Boolean getIsCustomService() { return isCustomService; }
-    public void setIsCustomService(Boolean isCustomService) { this.isCustomService = isCustomService; }
-
     public Boolean getIsAvailable() { return isAvailable; }
     public void setIsAvailable(Boolean isAvailable) { this.isAvailable = isAvailable; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
@@ -103,3 +93,4 @@ public class ServiceListing {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
+

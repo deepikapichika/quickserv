@@ -1,40 +1,83 @@
-<!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuickServ - Local Services at Your Doorstep</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        html, body {
+            height:100%;
+            margin:0;
+        }
+
+        body {
+            min-height:100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex:1;
+        }
+
+        .site-footer {
+            background: #111827;
+            color: #e5e7eb;
+            text-align: center;
+            padding:16px 24px;
+            font-size:14px;
+            margin-top: auto;
+        }
+
+        .site-footer a {
+            color: #93c5fd;
+            text-decoration: none;
+            margin:08px;
+        }
+
+        .site-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-<!-- Navigation Bar -->
-<nav class="navbar">
-    <div class="logo">QuickServ</div>
-    <ul class="nav-links">
-        <li><a href="#home">HOME</a></li>
-        <li><a href="#about">ABOUT US</a></li>
-        <li><a href="#gallery">GALLERY</a></li>
-        <li><a href="#services">SERVICE</a></li>
-        <li><a href="#contact">CONTACT US</a></li>
-        <li><a href="/login" class="login-btn">LOGIN</a></li>
-    </ul>
-</nav>
+<main>
+    <nav class="navbar">
+        <div class="logo">QuickServ</div>
+        <ul class="nav-links">
+            <li><a href="#home">HOME</a></li>
+            <li><a href="#about">ABOUT US</a></li>
+            <li><a href="#gallery">GALLERY</a></li>
+            <li><a href="#services">SERVICE</a></li>
+            <li><a href="#contact">CONTACT US</a></li>
+            <li><a href="/login" class="login-btn">LOGIN</a></li>
+        </ul>
+    </nav>
 
-<!-- Hero Section -->
-<section class="hero" id="home">
-    <div class="hero-content">
-        <div class="hero-text">
-            <h1>Find Trusted Local<br>Services at Your Doorstep</h1>
-            <p>From plumbing to beauty, QuickServ connects you with verified professionals in your area. Fast, reliable, and secure.</p>
-            <div class="hero-buttons">
-                <a href="/register" class="btn-primary">GET STARTED</a>
-                <a href="#services" class="btn-secondary">LEARN MORE</a>
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Find Trusted Local<br>Services at Your Doorstep</h1>
+                <p>From plumbing to beauty, QuickServ connects you with verified professionals in your area. Fast, reliable, and secure.</p>
+                <div class="hero-buttons">
+                    <a href="/register" class="btn-primary">GET STARTED</a>
+                    <a href="#services" class="btn-secondary">LEARN MORE</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Services">
             </div>
         </div>
-        <div class="hero-image">
-            <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Services">
-        </div>
-    </div>
-</section>
+    </section>
+</main>
+
+<footer class="site-footer">
+    <p>&copy;2026 QuickServ. All rights reserved.</p>
+    <p>
+        <a href="#about">About</a> |
+        <a href="#services">Services</a> |
+        <a href="#contact">Contact</a>
+    </p>
+</footer>
 </body>
 </html>

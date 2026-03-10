@@ -269,6 +269,7 @@
     <a href="/" class="logo">QuickServ</a>
     <div class="nav-links">
       <a href="/provider/services">My Services</a>
+      <a href="/provider/profile">Profile</a>
       <a href="/provider/dashboard">Dashboard</a>
       <a href="/browse">Browse</a>
       <a href="/logout" class="logout-link">Logout</a>
@@ -280,35 +281,36 @@
 <div class="main-content">
   <!-- Page Header -->
   <div class="page-header">
-    <h1>Add New Service</h1>
-    <p>List your service to reach more customers</p>
+    <h1 th:text="${service.id} != null ? 'Edit Service' : 'Add New Service'">Add New Service</h1>
+    <p th:text="${service.id} != null ? 'Update your service details and pricing' : 'List your service to reach more customers'">List your service to reach more customers</p>
   </div>
 
   <!-- Form Card -->
   <div class="form-card">
-    <form th:action="@{/provider/services/save}" th:object="${service}" method="post">
+    <form th:action="${service.id} != null ? @{'/provider/services/update/' + ${service.id}} : @{/provider/services/save}" th:object="${service}" method="post">
       <!-- Category -->
       <div class="form-group">
         <label class="form-label">Category</label>
         <select name="categoryId" class="form-select" required>
-          <option value="" disabled selected>Select Category</option>
+          <option value="" disabled th:selected="${service.category == null}">Select Category</option>
           <option th:each="cat : ${categories}"
                   th:value="${cat.id}"
-                  th:text="${cat.name} + ' ' + ${cat.iconUrl}"></option>
+                  th:selected="${service.category != null and service.category.id == cat.id}"
+                  th:text="${@categoryService.toDisplayCategoryName(cat.name)} + ' ' + ${cat.iconUrl}"></option>
         </select>
       </div>
 
       <!-- Service Title -->
       <div class="form-group">
         <label class="form-label">Service Title</label>
-        <input type="text" name="title" class="form-control"
+        <input type="text" th:field="*{title}" class="form-control"
                placeholder="e.g., Plumbing Repair" required>
       </div>
 
       <!-- Description -->
       <div class="form-group">
         <label class="form-label">Description</label>
-        <textarea name="description" class="form-control" rows="4"
+        <textarea th:field="*{description}" class="form-control" rows="4"
                   placeholder="Describe your service in detail..." required></textarea>
       </div>
 
@@ -316,13 +318,13 @@
       <div class="row">
         <div class="form-group">
           <label class="form-label">Price</label>
-          <input type="number" name="price" step="0.01" class="form-control"
+          <input type="number" th:field="*{price}" step="0.01" class="form-control"
                  placeholder="500" required>
         </div>
 
         <div class="form-group">
           <label class="form-label">Price Unit</label>
-          <select name="priceUnit" class="form-select" required>
+          <select th:field="*{priceUnit}" class="form-select" required>
             <option value="per hour">per hour</option>
             <option value="per visit">per visit</option>
             <option value="fixed">fixed price</option>
@@ -333,21 +335,22 @@
       <!-- Location -->
       <div class="form-group">
         <label class="form-label">Location</label>
-        <input type="text" name="location" class="form-control"
+        <input type="text" th:field="*{location}" class="form-control"
                placeholder="e.g., Mumbai, Delhi, etc." required>
       </div>
 
       <!-- Image URL (Optional) -->
       <div class="form-group">
         <label class="form-label">Image URL (optional)</label>
-        <input type="text" name="imageUrl" class="form-control"
+        <input type="text" th:field="*{imageUrl}" class="form-control"
                placeholder="https://example.com/image.jpg">
       </div>
 
       <!-- Action Buttons -->
       <div class="action-buttons">
         <button type="submit" class="btn-primary">
-          <i class="fas fa-plus-circle"></i> Add Service
+          <i class="fas" th:classappend="${service.id} != null ? ' fa-save' : ' fa-plus-circle'"></i>
+          <span th:text="${service.id} != null ? 'Update Service' : 'Add Service'">Add Service</span>
         </button>
         <a href="/provider/services" class="btn-secondary">
           <i class="fas fa-times"></i> Cancel

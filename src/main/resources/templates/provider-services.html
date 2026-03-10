@@ -286,6 +286,24 @@
       color: #ffcccc;
     }
 
+    .btn-edit {
+      background: rgba(13, 110, 253, 0.2);
+      border: 1px solid #0d6efd;
+      color: #9ec5fe;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.3s;
+      flex: 1;
+      text-align: center;
+    }
+
+    .btn-edit:hover {
+      background: rgba(13, 110, 253, 0.3);
+      color: #dbe9ff;
+    }
+
     /* Empty State */
     .empty-state {
       text-align: center;
@@ -366,6 +384,7 @@ class="background-img" alt="Background">
     <a href="/" class="logo">QuickServ</a>
     <div class="nav-links">
       <a href="/provider/services">My Services</a>
+      <a href="/provider/profile">Profile</a>
       <a href="/provider/dashboard">Dashboard</a>
       <a href="/browse">Browse</a>
       <a href="/logout" class="logout-link">Logout</a>
@@ -408,7 +427,7 @@ class="background-img" alt="Background">
           </div>
           <div class="detail-item">
             <div class="detail-label">Category</div>
-            <div class="detail-value" th:text="${service.category.name}">Category</div>
+            <div class="detail-value" th:text="${@categoryService.toDisplayCategoryName(service.category.name)}">Category</div>
           </div>
           <div class="detail-item">
             <div class="detail-label">Location</div>
@@ -419,6 +438,8 @@ class="background-img" alt="Background">
 
       <!-- Action Buttons -->
       <div class="service-actions">
+        <a th:href="@{'/provider/services/edit/' + ${service.id}}"
+           class="btn-edit">Edit</a>
         <a th:href="@{'/provider/services/toggle/' + ${service.id}}"
            class="btn-toggle"
            th:text="${service.isAvailable} ? 'Mark Unavailable' : 'Mark Available'"></a>

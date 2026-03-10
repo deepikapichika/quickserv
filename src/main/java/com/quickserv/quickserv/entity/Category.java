@@ -3,7 +3,12 @@ package com.quickserv.quickserv.entity;
 import jakarta.persistence.*;
 
 @Entity  // Tells Spring Boot this is a database table
-@Table(name = "categories")  // Name of the table in MySQL
+@Table(
+    name = "categories",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_categories_name", columnNames = "name")
+    }
+)  // Name of the table in MySQL
 public class Category {
 
     @Id  // Primary key

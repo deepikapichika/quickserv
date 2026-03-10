@@ -77,6 +77,31 @@
             <span class="info-value" th:text="${service.provider.email}">provider@email.com</span>
           </div>
         </div>
+
+        <div class="detail-section">
+          <h3 class="section-title">Available Sub-Services</h3>
+          <div th:if="${providerSubServices != null and !#lists.isEmpty(providerSubServices)}" class="table-responsive">
+            <table class="table table-dark table-bordered align-middle">
+              <thead>
+              <tr>
+                <th>Sub-Service</th>
+                <th>Price</th>
+                <th>Unit</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr th:each="offering : ${providerSubServices}">
+                <td th:text="${offering.subService.name}">Hair Cut</td>
+                <td>₹<span th:text="${offering.price}">300</span></td>
+                <td th:text="${offering.priceUnit}">per visit</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+          <p th:if="${providerSubServices == null or #lists.isEmpty(providerSubServices)}" style="color: rgba(224,170,255,0.7); margin-bottom: 0;">
+            No sub-services available for this provider under this category.
+          </p>
+        </div>
       </div>
 
       <!-- Right Column - Service Details -->
@@ -103,7 +128,7 @@
           <!-- Category -->
           <div class="info-row">
             <span class="info-label">Category:</span>
-            <span class="info-value" th:text="${service.category.name}">Category</span>
+            <span class="info-value" th:text="${@categoryService.toDisplayCategoryName(service.category.name)}">Category</span>
           </div>
 
           <!-- Status -->
@@ -117,7 +142,7 @@
 
           <!-- Book Button for Customers -->
           <div th:if="${user.role == 'CUSTOMER' and service.isAvailable}" style="margin-top: 25px;">
-            <a href="#" class="btn-book">
+            <a th:href="@{'/bookings/new/' + ${service.id}}" class="btn-book">
               <i class="fas fa-calendar-check"></i> Book This Service
             </a>
           </div>

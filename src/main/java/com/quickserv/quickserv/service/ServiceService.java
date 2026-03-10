@@ -6,6 +6,8 @@ import com.quickserv.quickserv.entity.User;
 import com.quickserv.quickserv.repository.ServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -62,5 +64,20 @@ public class ServiceService {
             return serviceRepository.save(service);
         }
         return null;
+    }
+
+    // Dashboard helper: returns available services first, then falls back to all services.
+    public List<ServiceListing> getMostBookedServices(int limit) {
+        List<ServiceListing> available = serviceRepository.findByIsAvailableTrue();
+        if (!available.isEmpty()) {
+            return available.subList(0, Math.min(limit, available.size()));
+        }
+
+        List<ServiceListing> allServices = serviceRepository.findAll();
+        if (!allServices.isEmpty()) {
+            return allServices.subList(0, Math.min(limit, allServices.size()));
+        }
+
+        return Collections.emptyList();
     }
 }

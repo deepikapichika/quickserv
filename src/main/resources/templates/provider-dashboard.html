@@ -176,6 +176,15 @@
       font-size: 14px;
     }
 
+    .provider-meta {
+      color: rgba(224, 170, 255, 0.85);
+      margin-top: 8px;
+      font-size: 13px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
     /* Section Header */
     .section-header {
       text-align: center;
@@ -537,6 +546,7 @@ class="background-img" alt="Background">
     <a href="/" class="logo">QuickServ</a>
     <div class="nav-links">
       <a href="/browse">Browse</a>
+      <a href="/provider/profile">Profile</a>
       <a href="/provider/dashboard">Dashboard</a>
       <a href="/logout" class="logout-link">Logout</a>
     </div>
@@ -560,6 +570,10 @@ class="background-img" alt="Background">
       <div class="user-details">
         <h3><span th:text="${user.name}">Provider Name</span></h3>
         <p><i class="fas fa-user-tag"></i> <span th:text="${user.role}">PROVIDER</span> Account</p>
+        <div class="provider-meta">
+          <span><i class="fas fa-briefcase"></i> <span th:text="${user.serviceType != null ? @categoryService.toDisplayCategoryName(user.serviceType) : 'Service type pending'}">Service Type</span></span>
+          <span><i class="fas fa-map-marker-alt"></i> <span th:text="${user.location}">Location</span></span>
+        </div>
       </div>
     </div>
   </div>
@@ -586,17 +600,17 @@ class="background-img" alt="Background">
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon">📅</div>
-      <h3>Today's Bookings</h3>
-      <div class="stat-number">2</div>
-      <a href="#" class="btn">View</a>
+      <div class="stat-icon">🗂️</div>
+      <h3>Service Categories</h3>
+      <div class="stat-number" th:text="${categoryCount}">0</div>
+      <a href="/provider/offerings/add-main-service" class="btn">Add Main Service</a>
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon">⭐</div>
-      <h3>Average Rating</h3>
-      <div class="stat-number">4.8</div>
-      <a href="#" class="btn">Details</a>
+      <div class="stat-icon">👤</div>
+      <h3>Profile Completion</h3>
+      <div class="stat-number"><span th:text="${profileCompletion}">0</span>%</div>
+      <a href="/provider/profile" class="btn">Complete Profile</a>
     </div>
   </div>
 
@@ -639,11 +653,20 @@ class="background-img" alt="Background">
 
   <!-- Action Buttons -->
   <div class="action-buttons">
-    <a href="/provider/services/new" class="btn-primary">
-      <i class="fas fa-plus-circle"></i> Add New Service
+    <a href="/provider/offerings/add-main-service" class="btn-primary">
+      <i class="fas fa-plus-circle"></i> Add Main Service
     </a>
-    <a href="/browse" class="btn-secondary">
-      <i class="fas fa-search"></i> Browse Services
+    <a href="/provider/services/new" class="btn-secondary">
+      <i class="fas fa-plus"></i> Add Detailed Service
+    </a>
+    <a href="/provider/offerings" class="btn-secondary">
+      <i class="fas fa-tasks"></i> Manage Sub-Services
+    </a>
+    <a href="/provider/locations" class="btn-secondary">
+      <i class="fas fa-map-marker-alt"></i> Service Locations
+    </a>
+    <a href="/provider/profile" class="btn-secondary">
+      <i class="fas fa-user-edit"></i> Manage Profile
     </a>
   </div>
 

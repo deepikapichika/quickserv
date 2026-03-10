@@ -15,11 +15,13 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             min-height: 100vh;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             background: linear-gradient(180deg, #6a2d91 0%, #5a1f7d 50%, #4a1570 100%);
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 24px 0;
         }
 
         /* Starry background */
@@ -89,7 +91,11 @@
         }
 
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 18px;
+        }
+
+        .provider-only {
+            display: none;
         }
 
         label {
@@ -152,6 +158,31 @@
             font-size: 18px;
         }
 
+        .password-field {
+            padding-right: 90px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 6px;
+        }
+
+        .password-toggle:hover,
+        .password-toggle:focus {
+            background: rgba(255, 255, 255, 0.15);
+            outline: none;
+        }
+
         .btn-register {
             width: 100%;
             padding: 14px;
@@ -193,7 +224,6 @@
             color: #ffeb3b;
         }
 
-        /* Alert messages */
         .alert {
             padding: 12px 15px;
             border-radius: 10px;
@@ -202,16 +232,18 @@
             border: 1px solid;
         }
 
-        .alert-success {
-            background: rgba(76, 175, 80, 0.2);
-            color: #b3e5b3;
-            border-color: rgba(76, 175, 80, 0.5);
-        }
-
         .alert-danger {
             background: rgba(244, 67, 54, 0.2);
             color: #ff9999;
             border-color: rgba(244, 67, 54, 0.5);
+        }
+
+        .field-hint {
+            display: block;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #e0d5ff;
+            line-height: 1.4;
         }
 
         @media (max-width: 480px) {
@@ -228,6 +260,10 @@
             .form-control {
                 padding: 12px 15px 12px 40px;
             }
+
+            body {
+                padding: 16px 0;
+            }
         }
     </style>
 </head>
@@ -235,17 +271,16 @@
 <div class="register-container">
     <h1>Create Account</h1>
 
-    <!-- Error message -->
     <div th:if="${error}" class="alert alert-danger" th:text="${error}">
         Error message
     </div>
 
     <form action="/register" method="post">
         <div class="form-group">
-            <label>Full Name</label>
+            <label>Username</label>
             <div class="input-wrapper">
                 <span class="input-icon">👤</span>
-                <input type="text" name="name" class="form-control" placeholder="Enter your full name" required>
+                <input type="text" name="name" class="form-control" placeholder="Enter your username" required>
             </div>
         </div>
 
@@ -261,7 +296,25 @@
             <label>Password</label>
             <div class="input-wrapper">
                 <span class="input-icon">🔒</span>
-                <input type="password" name="password" class="form-control" placeholder="Create a password" required>
+                <input type="password"
+                       id="passwordInput"
+                       name="password"
+                       class="form-control password-field"
+                       placeholder="Create a password"
+                       minlength="8"
+                       pattern="(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])[A-Za-z0-9@_]{8,}"
+                       title="Use at least 8 characters with uppercase, lowercase, and a number. Only @ and _ are allowed as special characters."
+                       required>
+                <button type="button" id="togglePasswordBtn" class="password-toggle" aria-label="Show password">Show</button>
+            </div>
+            <small class="field-hint">Minimum 8 characters. Must include A-Z, a-z, and 0-9. Allowed special characters: @ and _ only.</small>
+        </div>
+
+        <div class="form-group">
+            <label>Location</label>
+            <div class="input-wrapper">
+                <span class="input-icon">📍</span>
+                <input type="text" name="location" class="form-control" placeholder="Enter your location" required>
             </div>
         </div>
 
@@ -269,10 +322,24 @@
             <label>I want to</label>
             <div class="input-wrapper">
                 <span class="input-icon">⚙️</span>
-                <select name="role" class="form-control" required>
+                <select id="roleSelect" name="role" class="form-control" required>
                     <option value="" disabled selected>Select account type</option>
                     <option value="CUSTOMER">Find Services (Customer)</option>
                     <option value="PROVIDER">Offer Services (Provider)</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="providerServiceGroup" class="form-group provider-only">
+            <label>Type of Service You Provide</label>
+            <div class="input-wrapper">
+                <span class="input-icon">🛠️</span>
+                <select id="serviceTypeSelect" name="serviceType" class="form-control">
+                    <option value="" selected>Select a service type</option>
+                    <option th:each="category : ${categories}"
+                            th:value="${category.name}"
+                            th:text="${@categoryService.toDisplayCategoryName(category.name)}">
+                    </option>
                 </select>
             </div>
         </div>
@@ -284,5 +351,34 @@
         Already have an account? <a href="/login">Login</a>
     </p>
 </div>
+
+<script>
+    const roleSelect = document.getElementById('roleSelect');
+    const providerServiceGroup = document.getElementById('providerServiceGroup');
+    const serviceTypeSelect = document.getElementById('serviceTypeSelect');
+    const passwordInput = document.getElementById('passwordInput');
+    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+
+    function toggleProviderFields() {
+        const isProvider = roleSelect.value === 'PROVIDER';
+        providerServiceGroup.style.display = isProvider ? 'block' : 'none';
+        serviceTypeSelect.required = isProvider;
+        if (!isProvider) {
+            serviceTypeSelect.value = '';
+        }
+    }
+
+    if (passwordInput && togglePasswordBtn) {
+        togglePasswordBtn.addEventListener('click', function () {
+            const showingPassword = passwordInput.type === 'text';
+            passwordInput.type = showingPassword ? 'password' : 'text';
+            togglePasswordBtn.textContent = showingPassword ? 'Show' : 'Hide';
+            togglePasswordBtn.setAttribute('aria-label', showingPassword ? 'Show password' : 'Hide password');
+        });
+    }
+
+    roleSelect.addEventListener('change', toggleProviderFields);
+    toggleProviderFields();
+</script>
 </body>
 </html>
