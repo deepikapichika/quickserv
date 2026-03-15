@@ -2,6 +2,7 @@ package com.quickserv.quickserv;
 
 import com.quickserv.quickserv.entity.Category;
 import com.quickserv.quickserv.repository.CategoryRepository;
+import com.quickserv.quickserv.service.UserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,8 +16,11 @@ public class QuickservApplication {
     }
 
     @Bean
-    public CommandLineRunner initData(CategoryRepository categoryRepository) {
+    public CommandLineRunner initData(CategoryRepository categoryRepository, UserService userService) {
         return args -> {
+            // Seed default admin account
+            userService.ensureAdminExists();
+
             // Check if categories already exist
             if (categoryRepository.count() == 0) {
                 System.out.println("📦 Creating default categories...");

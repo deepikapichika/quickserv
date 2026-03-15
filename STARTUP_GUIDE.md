@@ -82,6 +82,30 @@ Then open in browser:
 - **Login**: http://localhost:8080/login
 - **Register**: http://localhost:8080/register
 
+## 🔐 Logging in as Admin
+
+A default admin account is automatically created when the application starts for the first time.
+
+**Default admin credentials (development only):**
+| Field    | Value                   |
+|----------|-------------------------|
+| Email    | `admin@quickserve.com`  |
+| Password | `Admin@123`             |
+
+> ⚠️ **Security warning:** Change the default password before deploying to a shared or production environment. You can override the credentials in `application.properties`:
+> ```properties
+> admin.default.email=your-admin@example.com
+> admin.default.password=YourStrongPassword!
+> ```
+
+**Steps to log in as admin:**
+1. Start the application (see Step 3 above).
+2. Open http://localhost:8080/login in your browser.
+3. Enter the email **`admin@quickserve.com`** and password **`Admin@123`**.
+4. Click **Login** — you will be automatically redirected to the **Admin Dashboard** at `/admin/dashboard`.
+
+> **Note:** The admin account can only be created via the automatic seeding on startup. The registration page intentionally does not offer an ADMIN role option to prevent unauthorized admin account creation.
+
 ## 🔧 Troubleshooting
 
 ### Error: "Failed to start bean 'webServerStartStop'"
@@ -130,7 +154,10 @@ server.port=8081
 
 ## 📝 Test Data
 
-Login with:
-- **Email**: john@example.com
-- **Password**: password
+**Admin (auto-seeded on first startup — change password before production use):**
+- **Email**: admin@quickserve.com  *(configurable via `admin.default.email`)*
+- **Password**: Admin@123  *(configurable via `admin.default.password`)*
+
+**Regular user (self-register at /register):**
+- Choose role: `CUSTOMER` or `PROVIDER`
 
