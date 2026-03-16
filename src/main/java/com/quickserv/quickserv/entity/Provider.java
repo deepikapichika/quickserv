@@ -2,6 +2,8 @@ package com.quickserv.quickserv.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "providers")
@@ -35,6 +37,17 @@ public class Provider {
     @Column(name = "total_reviews")
     private Integer totalReviews = 0;
 
+    @Column(name = "provider_locations", length = 1000)
+    private String providerLocations;
+
+    @ManyToMany
+    @JoinTable(
+            name = "provider_categories",
+            joinColumns = @JoinColumn(name = "provider_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private Set<Category> selectedCategories = new LinkedHashSet<>();
+
     // Constructors
     public Provider() {}
 
@@ -43,6 +56,9 @@ public class Provider {
         this.category = category;
         this.serviceCharge = serviceCharge;
         this.availability = "Mon-Sun 9AM-6PM"; // Default availability
+        if (category != null) {
+            this.selectedCategories.add(category);
+        }
     }
 
     // Getters and Setters
@@ -69,4 +85,10 @@ public class Provider {
 
     public Integer getTotalReviews() { return totalReviews; }
     public void setTotalReviews(Integer totalReviews) { this.totalReviews = totalReviews; }
+
+    public String getProviderLocations() { return providerLocations; }
+    public void setProviderLocations(String providerLocations) { this.providerLocations = providerLocations; }
+
+    public Set<Category> getSelectedCategories() { return selectedCategories; }
+    public void setSelectedCategories(Set<Category> selectedCategories) { this.selectedCategories = selectedCategories; }
 }

@@ -1,49 +1,55 @@
 package com.quickserv.quickserv.controller;
 
-import com.quickserv.quickserv.entity.User;
+import com.quickserv.quickserv.entity.Booking;
 import com.quickserv.quickserv.entity.Category;
+import com.quickserv.quickserv.entity.Provider;
 import com.quickserv.quickserv.entity.ServiceListing;
-import com.quickserv.quickserv.service.CategoryService;
-import com.quickserv.quickserv.service.ServiceService;
+import com.quickserv.quickserv.entity.User;
 import com.quickserv.quickserv.service.BookingService;
+import com.quickserv.quickserv.service.CategoryService;
+import com.quickserv.quickserv.service.ProviderService;
+import com.quickserv.quickserv.service.ServiceService;
+import com.quickserv.quickserv.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
-import jakarta.servlet.http.HttpSession;
 import java.util.List;
 
 @Controller
 public class DashboardController {
 
-    @Autowired
-    private CategoryService categoryService;
+    @Autowired private CategoryService categoryService;
+    @Autowired private ServiceService serviceService;
+    @Autowired private BookingService bookingService;
+    @Autowired private UserService userService;
+    @Autowired private ProviderService providerService;
 
-    @Autowired
-    private ServiceService serviceService;
-
-    @Autowired
-    private BookingService bookingService;
+    @GetMapping("/dashboard")
+    public String redirectDashboard(HttpSession session) {
+        User user = (User) session.getAttribute("loggedInUser");
+        if (user == null) return "redirect:/login";
+        if ("ADMIN".equals(user.getRole())) return "redirect:/admin/dashboard";
+        if ("PROVIDER".equals(user.getRole())) return "redirect:/provider/dashboard";
+        return "redirect:/customer/dashboard";
+    }
 
     @GetMapping("/customer/dashboard")
     public String customerDashboard(HttpSession session, Model model) {
         User user = (User) session.getAttribute("loggedInUser");
-        if (user == null) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
+        if (!"CUSTOMER".equals(user.getRole())) return "redirect:/dashboard";
 
-        // Add categories for display on customer dashboard
         List<Category> categories = categoryService.getAllCategories();
         model.addAttribute("categories", categories);
 
-        // Add recent services (limit to 4)
         List<ServiceListing> recentServices = serviceService.getAvailableServices();
-        if (recentServices.size() > 4) {
-            recentServices = recentServices.subList(0, 4);
-        }
+        if (recentServices.size() > 4) recentServices = recentServices.subList(0, 4);
         model.addAttribute("recentServices", recentServices);
-
         model.addAttribute("user", user);
         return "customer-dashboard";
     }
@@ -51,30 +57,22 @@ public class DashboardController {
     @GetMapping("/provider/dashboard")
     public String providerDashboard(HttpSession session, Model model) {
         User user = (User) session.getAttribute("loggedInUser");
-        if (user == null || !"PROVIDER".equals(user.getRole())) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
+        if (!"PROVIDER".equals(user.getRole())) return "redirect:/dashboard";
 
-        // Get provider's services for stats
         List<ServiceListing> providerServices = serviceService.getServicesByProvider(user);
         model.addAttribute("services", providerServices);
 
-        // Calculate stats
         long activeCount = providerServices.stream().filter(ServiceListing::getIsAvailable).count();
         model.addAttribute("serviceCount", providerServices.size());
         model.addAttribute("activeCount", activeCount);
 
-        // Get recent services (limit to 3)
-        List<ServiceListing> recentServices = providerServices;
-        if (recentServices.size() > 3) {
-            recentServices = recentServices.subList(0, 3);
-        }
+        List<ServiceListing> recentServices = providerServices.size() > 3
+                ? providerServices.subList(0, 3) : providerServices;
         model.addAttribute("recentServices", recentServices);
 
-        // Get booking statistics
         BookingService.BookingStats bookingStats = bookingService.getBookingStats(user);
         model.addAttribute("bookingStats", bookingStats);
-
         model.addAttribute("user", user);
         return "provider-dashboard";
     }
@@ -82,10 +80,31 @@ public class DashboardController {
     @GetMapping("/admin/dashboard")
     public String adminDashboard(HttpSession session, Model model) {
         User user = (User) session.getAttribute("loggedInUser");
-        if (user == null || !"ADMIN".equals(user.getRole())) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
+        if (!"ADMIN".equals(user.getRole())) return "redirect:/dashboard";
+
+        List<User> allUsers = userService.getAllUsers();
+        List<Provider> allProviders = providerService.getAllProviders();
+        List<Booking> allBookings = bookingService.getAllBookings();
+        List<Category> categories = categoryService.getAllCategories();
+
         model.addAttribute("user", user);
+        model.addAttribute("allUsers", allUsers);
+        model.addAttribute("allProviders", allProviders);
+        model.addAttribute("allBookings", allBookings);
+        model.addAttribute("categories", categories);
+        model.addAttribute("userCount", allUsers.size());
+        model.addAttribute("providerCount", allProviders.size());
+        model.addAttribute("bookingCount", allBookings.size());
+        model.addAttribute("categoryCount", categoryService.countCategories());
         return "admin-dashboard";
+    }
+
+    @PostMapping("/admin/users/delete/{id}")
+    public String deleteUser(@PathVariable Long id, HttpSession session) {
+        User admin = (User) session.getAttribute("loggedInUser");
+        if (admin == null || !"ADMIN".equals(admin.getRole())) return "redirect:/login";
+        userService.deleteUserById(id);
+        return "redirect:/admin/dashboard";
     }
 }

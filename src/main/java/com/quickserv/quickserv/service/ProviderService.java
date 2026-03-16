@@ -6,7 +6,9 @@ import com.quickserv.quickserv.entity.User;
 import com.quickserv.quickserv.repository.ProviderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 @Service
@@ -28,6 +30,32 @@ public class ProviderService {
         }
 
         Provider provider = new Provider(user, category, serviceCharge);
+        provider.setSelectedCategories(new LinkedHashSet<>(List.of(category)));
+        provider.setProviderLocations(user.getLocation());
+        return providerRepository.save(provider);
+    }
+
+    public Provider registerProviderFromRegistration(User user,
+                                                     Long categoryId,
+                                                     CategoryService categoryService) {
+        if (providerRepository.findByUser(user) != null) {
+            throw new RuntimeException("User is already registered as a provider");
+        }
+
+        if (categoryId == null) {
+            throw new RuntimeException("Please select a service category");
+        }
+
+        Category category = categoryService.getCategoryById(categoryId);
+        if (category == null) {
+            throw new RuntimeException("Invalid category selection");
+        }
+
+        Provider provider = new Provider(user, category, BigDecimal.ZERO);
+        provider.setSelectedCategories(new LinkedHashSet<>(List.of(category)));
+        provider.setProviderLocations(user.getLocation());
+        provider.setAvailability("Flexible");
+
         return providerRepository.save(provider);
     }
 

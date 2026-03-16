@@ -13,6 +13,12 @@
       box-sizing: border-box;
     }
 
+    /* Hide scrollbars (scroll still works) */
+    *::-webkit-scrollbar { width: 0; height: 0; background: transparent; }
+    *::-webkit-scrollbar-thumb { background: transparent; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    * { scrollbar-width: none; -ms-overflow-style: none; }
+
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #10002B;
@@ -175,6 +181,21 @@
     .form-select:focus {
       outline: none;
       border-color: #7B2CBF;
+    }
+
+    .form-select option {
+      background: #5a189a;
+      color: #fff;
+    }
+
+    .form-select option:hover {
+      background: #7b2cbf;
+      color: #fff;
+    }
+
+    .form-select option:checked {
+      background: #9d4edd;
+      color: #fff;
     }
 
     .btn-filter {
@@ -553,5 +574,4 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html></content>
-<parameter name="filePath">C:\Users\MOHAN\OneDrive\Desktop\project-service\quickserv\src\main\resources\templates\search-results.html
+</html>

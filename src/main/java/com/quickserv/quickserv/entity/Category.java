@@ -8,13 +8,16 @@ public class Category {
 
     @Id  // Primary key
     @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto-increment
+    @Column(name = "id")
     private Long id;
 
-    @Column(unique = true, nullable = false)  // Cannot be null, must be unique
+    @Column(name = "name", unique = true, nullable = false)  // Cannot be null, must be unique
     private String name;  // e.g., "Plumber", "Electrician"
 
+    @Column(name = "description")
     private String description;  // Description of the category
 
+    @Column(name = "icon_url")
     private String iconUrl;  // Emoji or icon for the category (🔧, ⚡, etc.)
 
     // Empty constructor - required by JPA
@@ -60,5 +63,21 @@ public class Category {
 
     public void setIconUrl(String iconUrl) {
         this.iconUrl = iconUrl;
+    }
+
+    public Long getCategoryId() {
+        return id;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.id = categoryId;
+    }
+
+    public String getCategoryName() {
+        return name;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.name = categoryName;
     }
 }

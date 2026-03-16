@@ -34,6 +34,11 @@ public class BookingService {
         return bookingRepository.findByProviderOrderByCreatedAtDesc(provider);
     }
 
+    // Get all bookings platform-wide (admin)
+    public List<Booking> getAllBookings() {
+        return bookingRepository.findAll();
+    }
+
     // Get upcoming bookings for a provider
     public List<Booking> getUpcomingBookings(User provider) {
         return bookingRepository.findUpcomingBookingsForProvider(provider, LocalDateTime.now());

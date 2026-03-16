@@ -5,10 +5,96 @@
     box-sizing: border-box;
 }
 
+/* ===== HIDE SCROLLBARS GLOBALLY (scroll still works) ===== */
+
+/* Chrome, Edge, Safari */
+*::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Firefox */
+* {
+    scrollbar-width: none;
+}
+
+/* IE / Edge Legacy */
+* {
+    -ms-overflow-style: none;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: #f5f5f5;
     color: #333;
+}
+
+/* Global dropdown theme */
+:root {
+    --qs-select-bg: #6a2d91;
+    --qs-select-bg-hover: #7a3ea6;
+    --qs-select-bg-active: #8c4fba;
+    --qs-select-border: rgba(255, 255, 255, 0.32);
+    --qs-select-text: #ffffff;
+}
+
+select,
+select.form-control,
+select.form-select,
+.search-field select,
+.search-select {
+    background-color: var(--qs-select-bg) !important;
+    color: var(--qs-select-text) !important;
+    border: 1px solid var(--qs-select-border) !important;
+    border-radius: 12px;
+}
+
+select:focus,
+select.form-control:focus,
+select.form-select:focus,
+.search-field select:focus,
+.search-select:focus {
+    background-color: var(--qs-select-bg-hover) !important;
+    color: var(--qs-select-text) !important;
+    border-color: rgba(255, 255, 255, 0.6) !important;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
+}
+
+select option,
+select.form-control option,
+select.form-select option,
+.search-field select option,
+.search-select option {
+    background-color: var(--qs-select-bg) !important;
+    color: var(--qs-select-text) !important;
+}
+
+select option:hover,
+select.form-control option:hover,
+select.form-select option:hover,
+.search-field select option:hover,
+.search-select option:hover {
+    background-color: var(--qs-select-bg-hover) !important;
+    color: var(--qs-select-text) !important;
+}
+
+select option:checked,
+select.form-control option:checked,
+select.form-select option:checked,
+.search-field select option:checked,
+.search-select option:checked {
+    background-color: var(--qs-select-bg-active) !important;
+    color: var(--qs-select-text) !important;
 }
 
 /* ===== NAVBAR ===== */

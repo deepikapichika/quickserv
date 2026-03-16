@@ -6,6 +6,130 @@
     <title>QuickServ - Local Services at Your Doorstep</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hero {
+            flex: 1;
+        }
+
+        .home-footer-wrap {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #240046 0%, #5a189a 55%, #7b2cbf 100%);
+            box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.25);
+        }
+
+        .home-footer {
+            max-width: none;
+            margin: 0;
+            background: transparent;
+            color: #fff;
+            border-radius: 0;
+            box-shadow: none;
+            border: none;
+            padding: 30px 24px 18px;
+        }
+
+        .home-footer-grid,
+        .home-footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .home-footer-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr 1fr;
+            gap: 24px;
+        }
+
+        .home-footer-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .home-footer-subtitle {
+            color: rgba(255, 255, 255, 0.86);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .home-footer h4 {
+            font-size: 14px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            color: #e0aaff;
+        }
+
+        .home-footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .home-footer-links li {
+            margin-bottom: 8px;
+        }
+
+        .home-footer a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .home-footer a:hover {
+            color: #fff;
+        }
+
+        .home-footer-social {
+            display: flex;
+            gap: 10px;
+        }
+
+        .home-footer-social a {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+        }
+
+        .home-footer-bottom {
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.24);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        @media (max-width: 900px) {
+            .home-footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .home-footer-grid {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .home-footer {
+                padding: 24px 16px 14px;
+            }
+        }
+    </style>
 </head>
 <body>
 <!-- Navigation Bar -->
@@ -28,37 +152,6 @@
             <h1>Find Trusted Local<br>Services at Your Doorstep</h1>
             <p>From plumbing to beauty, QuickServ connects you with verified professionals in your area. Fast, reliable, and secure.</p>
 
-            <!-- Search Form -->
-            <div class="search-form">
-                <form action="/services/search" method="get">
-                    <div class="search-container">
-                        <div class="search-wrapper">
-                            <div class="search-field location-field">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <input type="text" name="location" placeholder="Enter your location" required>
-                            </div>
-
-                            <div class="search-field category-field">
-                                <i class="fas fa-tools"></i>
-                                <select name="categoryId">
-                                    <option value="">All Services</option>
-                                    <option value="1">Electrician</option>
-                                    <option value="2">Plumber</option>
-                                    <option value="3">AC Repair</option>
-                                    <option value="4">Beautician</option>
-                                    <option value="5">Tutor</option>
-                                </select>
-                            </div>
-
-                            <button type="submit" class="search-btn">
-                                <i class="fas fa-search"></i>
-                                <span>Search</span>
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
             <div class="hero-buttons">
                 <a href="/register" class="btn-primary">GET STARTED</a>
                 <a href="#services" class="btn-secondary">LEARN MORE</a>
@@ -69,5 +162,42 @@
         </div>
     </div>
 </section>
+
+<footer class="home-footer-wrap" id="contact">
+    <div class="home-footer">
+        <div class="home-footer-grid">
+            <div>
+                <div class="home-footer-title">QuickServ</div>
+                <p class="home-footer-subtitle">Trusted local services at your doorstep. Fast booking, verified providers, secure experience.</p>
+            </div>
+            <div>
+                <h4>Navigation</h4>
+                <ul class="home-footer-links">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="/login">Login</a></li>
+                    <li><a href="/register">Register</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Contact</h4>
+                <ul class="home-footer-links">
+                    <li><a href="mailto:support@quickserve.com">support@quickserve.com</a></li>
+                    <li><a href="tel:+910000000000">+91 00000 00000</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Follow Us</h4>
+                <div class="home-footer-social">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="X"><i class="fab fa-x-twitter"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="home-footer-bottom">&copy; 2026 QuickServe. All rights reserved.</div>
+    </div>
+</footer>
 </body>
 </html>

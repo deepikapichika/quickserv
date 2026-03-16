@@ -18,6 +18,8 @@ public interface ProviderRepository extends JpaRepository<Provider, Long> {
     // Find providers by category
     List<Provider> findByCategory(Category category);
 
+    boolean existsByCategory(Category category);
+
     // Find providers by category ID
     List<Provider> findByCategoryId(Long categoryId);
 

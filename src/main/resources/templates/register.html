@@ -11,6 +11,12 @@
             box-sizing: border-box;
         }
 
+        /* Hide scrollbars (scroll still works) */
+        *::-webkit-scrollbar { width: 0; height: 0; background: transparent; }
+        *::-webkit-scrollbar-thumb { background: transparent; }
+        *::-webkit-scrollbar-track { background: transparent; }
+        * { scrollbar-width: none; -ms-overflow-style: none; }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             min-height: 100vh;
@@ -19,7 +25,9 @@
             justify-content: center;
             background: linear-gradient(180deg, #6a2d91 0%, #5a1f7d 50%, #4a1570 100%);
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 24px 0;
         }
 
         /* Starry background */
@@ -76,6 +84,8 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             width: 100%;
             max-width: 450px;
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
             position: relative;
             z-index: 10;
         }
@@ -136,10 +146,22 @@
             background-position: right 18px center;
             background-size: 16px;
             padding-right: 45px;
+            background-color: rgba(106, 45, 145, 0.9);
+            color: #fff;
         }
 
         select.form-control option {
             background: #6a2d91;
+            color: #fff;
+        }
+
+        select.form-control option:hover {
+            background: #7a3ea6;
+            color: #fff;
+        }
+
+        select.form-control option:checked {
+            background: #8c4fba;
             color: #fff;
         }
 
@@ -150,6 +172,7 @@
             transform: translateY(-50%);
             color: rgba(255, 255, 255, 0.6);
             font-size: 18px;
+            pointer-events: none;
         }
 
         .btn-register {
@@ -214,10 +237,75 @@
             border-color: rgba(244, 67, 54, 0.5);
         }
 
+        .password-hint {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #e0d5ff;
+            line-height: 1.5;
+        }
+
+        .password-hint.invalid {
+            color: #ff9999;
+        }
+
+        .password-hint.valid {
+            color: #b3e5b3;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.75);
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .multi-select {
+            appearance: auto;
+            min-height: 130px;
+            border-radius: 12px;
+            padding: 12px 14px;
+            overflow-y: auto;
+            line-height: 1.4;
+            background-image: none;
+        }
+
+        .multi-select option {
+            padding: 6px 10px;
+            color: #fff;
+            background: #6a2d91;
+        }
+
+        .multi-select:focus {
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 10px rgba(200, 100, 255, 0.3);
+        }
+
+        .provider-section {
+            display: none;
+        }
+
+        .field-error {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #ff9999;
+        }
+
+        .helper-text {
+            margin-top: 8px;
+            font-size: 12px;
+            color: rgba(224, 213, 255, 0.9);
+        }
+
         @media (max-width: 480px) {
             .register-container {
                 padding: 35px;
                 margin: 20px;
+                max-height: calc(100vh - 40px);
             }
 
             h1 {
@@ -240,36 +328,64 @@
         Error message
     </div>
 
-    <form action="/register" method="post">
+    <form th:action="@{/register}" action="/register" method="post" id="registerForm">
         <div class="form-group">
-            <label>Full Name</label>
+            <label for="name">Full Name</label>
             <div class="input-wrapper">
                 <span class="input-icon">👤</span>
-                <input type="text" name="name" class="form-control" placeholder="Enter your full name" required>
+                <input type="text" id="name" name="name" class="form-control" placeholder="Enter your full name" required>
             </div>
         </div>
 
         <div class="form-group">
-            <label>Email</label>
+            <label for="email">Email</label>
             <div class="input-wrapper">
                 <span class="input-icon">📧</span>
-                <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required>
             </div>
         </div>
 
         <div class="form-group">
-            <label>Password</label>
+            <label for="password">Password</label>
             <div class="input-wrapper">
                 <span class="input-icon">🔒</span>
-                <input type="password" name="password" class="form-control" placeholder="Create a password" required>
+                <input type="password"
+                       id="password"
+                       name="password"
+                       class="form-control"
+                       placeholder="Create a password"
+                       pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$"
+                       title="At least 8 characters, including uppercase, lowercase, and a number"
+                       required>
+                <button type="button" class="password-toggle" id="togglePassword" aria-label="Show password">👁</button>
+            </div>
+            <p id="passwordHint" class="password-hint">
+                Use at least 8 characters with 1 uppercase letter, 1 lowercase letter, and 1 number.
+            </p>
+        </div>
+
+        <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <div class="input-wrapper">
+                <span class="input-icon">📱</span>
+                <input type="text" id="phone" name="phone" class="form-control" placeholder="Enter phone number" required>
+            </div>
+            <p class="helper-text">Use digits and optional +, -, spaces, or parentheses.</p>
+        </div>
+
+        <div class="form-group">
+            <label for="location">Location</label>
+            <div class="input-wrapper">
+                <span class="input-icon">📍</span>
+                <input type="text" id="location" name="location" class="form-control" placeholder="Enter your location" required>
             </div>
         </div>
 
         <div class="form-group">
-            <label>I want to</label>
+            <label for="role">I want to</label>
             <div class="input-wrapper">
                 <span class="input-icon">⚙️</span>
-                <select name="role" class="form-control" required>
+                <select id="role" name="role" class="form-control" required>
                     <option value="" disabled selected>Select account type</option>
                     <option value="CUSTOMER">Find Services (Customer)</option>
                     <option value="PROVIDER">Offer Services (Provider)</option>
@@ -277,12 +393,159 @@
             </div>
         </div>
 
+        <div id="providerSection" class="provider-section">
+            <div class="form-group">
+                <label for="categoryId">Service Category</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🛠</span>
+                    <select id="categoryId" name="category_id" class="form-control">
+                        <option value="">Select service category</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <p id="formError" class="field-error" style="display:none;"></p>
         <button type="submit" class="btn-register">Register</button>
     </form>
 
     <p class="login-link">
-        Already have an account? <a href="/login">Login</a>
+        Already have an account? <a th:href="@{/login}" href="/login">Login</a>
     </p>
 </div>
+
+<script>
+    const registerForm = document.getElementById('registerForm');
+    const passwordInput = document.getElementById('password');
+    const passwordHint = document.getElementById('passwordHint');
+    const togglePassword = document.getElementById('togglePassword');
+    const roleInput = document.getElementById('role');
+    const providerSection = document.getElementById('providerSection');
+    const categoryInput = document.getElementById('categoryId');
+    const formError = document.getElementById('formError');
+    const phoneInput = document.getElementById('phone');
+    const locationInput = document.getElementById('location');
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[0-9+\-()\s]{7,20}$/;
+
+    function updatePasswordHint() {
+        const isValid = passwordRegex.test(passwordInput.value);
+        passwordHint.classList.remove('valid', 'invalid');
+
+        if (!passwordInput.value) {
+            return;
+        }
+
+        passwordHint.classList.add(isValid ? 'valid' : 'invalid');
+        passwordHint.textContent = isValid
+            ? 'Password looks good.'
+            : 'Password must be at least 8 characters and include uppercase, lowercase, and a number.';
+    }
+
+    function toggleProviderFields() {
+        const isProvider = roleInput.value === 'PROVIDER';
+        providerSection.style.display = isProvider ? 'block' : 'none';
+        categoryInput.required = isProvider;
+    }
+
+    function populateCategorySelect(selectEl, items) {
+        const selected = selectEl.value;
+        selectEl.innerHTML = '<option value="">Select service category</option>';
+
+        items.forEach(category => {
+            const option = document.createElement('option');
+            option.value = String(category.id);
+            option.textContent = category.name;
+            if (selected && selected === option.value) {
+                option.selected = true;
+            }
+            selectEl.appendChild(option);
+        });
+    }
+
+    async function loadProviderLookups() {
+        try {
+            const categoriesResponse = await fetch('/categories/all', {headers: {'Accept': 'application/json'}});
+
+            if (!categoriesResponse.ok) {
+                throw new Error('Failed to load category data');
+            }
+
+            const categories = await categoriesResponse.json();
+            populateCategorySelect(categoryInput, categories);
+        } catch (error) {
+            showFormError('Unable to load categories. Please refresh the page.');
+        }
+    }
+
+    function showFormError(message) {
+        formError.style.display = 'block';
+        formError.textContent = message;
+    }
+
+    function clearFormError() {
+        formError.style.display = 'none';
+        formError.textContent = '';
+    }
+
+    togglePassword.addEventListener('click', function () {
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        togglePassword.textContent = isPassword ? '🙈' : '👁';
+        togglePassword.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+    });
+
+    passwordInput.addEventListener('input', updatePasswordHint);
+    roleInput.addEventListener('change', toggleProviderFields);
+
+    registerForm.addEventListener('submit', function (event) {
+        clearFormError();
+
+        if (!nameInput.value.trim()) {
+            event.preventDefault();
+            return showFormError('Please enter your full name.');
+        }
+
+        if (!emailRegex.test(emailInput.value.trim())) {
+            event.preventDefault();
+            return showFormError('Please enter a valid email address.');
+        }
+
+        if (!passwordRegex.test(passwordInput.value)) {
+            event.preventDefault();
+            passwordHint.classList.remove('valid');
+            passwordHint.classList.add('invalid');
+            passwordHint.textContent = 'Password must be at least 8 characters and include uppercase, lowercase, and a number.';
+            return showFormError('Please use a stronger password.');
+        }
+
+        if (!phoneRegex.test(phoneInput.value.trim())) {
+            event.preventDefault();
+            return showFormError('Please enter a valid phone number.');
+        }
+
+        if (!locationInput.value.trim()) {
+            event.preventDefault();
+            return showFormError('Please enter your location.');
+        }
+
+        if (!roleInput.value) {
+            event.preventDefault();
+            return showFormError('Please select an account type.');
+        }
+
+        if (roleInput.value === 'PROVIDER' && !categoryInput.value) {
+            event.preventDefault();
+            return showFormError('Please select a service category.');
+        }
+    });
+
+    loadProviderLookups();
+    toggleProviderFields();
+</script>
 </body>
 </html>

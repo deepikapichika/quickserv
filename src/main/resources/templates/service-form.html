@@ -13,6 +13,12 @@
       box-sizing: border-box;
     }
 
+    /* Hide scrollbars (scroll still works) */
+    *::-webkit-scrollbar { width: 0; height: 0; background: transparent; }
+    *::-webkit-scrollbar-thumb { background: transparent; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    * { scrollbar-width: none; -ms-overflow-style: none; }
+
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #10002B;
@@ -163,7 +169,17 @@
     }
 
     .form-select option {
-      background: #10002B;
+      background: #5a189a;
+      color: white;
+    }
+
+    .form-select option:hover {
+      background: #7b2cbf;
+      color: white;
+    }
+
+    .form-select option:checked {
+      background: #9d4edd;
       color: white;
     }
 

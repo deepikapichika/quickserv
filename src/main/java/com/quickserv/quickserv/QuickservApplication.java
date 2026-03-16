@@ -1,22 +1,44 @@
 package com.quickserv.quickserv;
 
 import com.quickserv.quickserv.entity.Category;
+import com.quickserv.quickserv.entity.User;
 import com.quickserv.quickserv.repository.CategoryRepository;
+import com.quickserv.quickserv.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 public class QuickservApplication {
+
+    private static final String ADMIN_EMAIL = "admin@quickserve.com";
+    private static final String ADMIN_PASSWORD = "Admin@123";
 
     public static void main(String[] args) {
         SpringApplication.run(QuickservApplication.class, args);
     }
 
     @Bean
-    public CommandLineRunner initData(CategoryRepository categoryRepository) {
+    public CommandLineRunner initData(CategoryRepository categoryRepository,
+                                      UserRepository userRepository,
+                                      PasswordEncoder passwordEncoder) {
         return args -> {
+            // Initialize admin user
+            if (userRepository.findByEmail(ADMIN_EMAIL).isEmpty()) {
+                User adminUser = new User();
+                adminUser.setName("QuickServ Admin");
+                adminUser.setEmail(ADMIN_EMAIL);
+                adminUser.setPassword(passwordEncoder.encode(ADMIN_PASSWORD));
+                adminUser.setRole("ADMIN");
+                adminUser.setLocation("System");
+                userRepository.save(adminUser);
+                System.out.println("✅ Default admin account created: " + ADMIN_EMAIL);
+            } else {
+                System.out.println("ℹ️ Admin account already exists, skipping initialization");
+            }
+
             // Check if categories already exist
             if (categoryRepository.count() == 0) {
                 System.out.println("📦 Creating default categories...");
