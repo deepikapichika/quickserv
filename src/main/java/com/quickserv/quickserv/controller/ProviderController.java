@@ -1,36 +1,70 @@
 package com.quickserv.quickserv.controller;
 
+import com.quickserv.quickserv.dto.provider.ProviderCreateRequest;
+import com.quickserv.quickserv.dto.provider.ProviderResponse;
 import com.quickserv.quickserv.entity.Provider;
 import com.quickserv.quickserv.entity.User;
-import com.quickserv.quickserv.service.ProviderService;
+import com.quickserv.quickserv.exception.BusinessValidationException;
 import com.quickserv.quickserv.service.CategoryService;
+import com.quickserv.quickserv.service.ProviderService;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/provider")
 public class ProviderController {
 
-    @Autowired
-    private ProviderService providerService;
+    private final ProviderService providerService;
+    private final CategoryService categoryService;
 
-    @Autowired
-    private CategoryService categoryService;
+    public ProviderController(ProviderService providerService, CategoryService categoryService) {
+        this.providerService = providerService;
+        this.categoryService = categoryService;
+    }
+
+    @PostMapping("/add")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> addProvider(@Valid @RequestBody ProviderCreateRequest request,
+                                                           HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        if (loggedInUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "success", false,
+                    "message", "Please log in to continue."
+            ));
+        }
+
+        // Non-admin users can only create/update provider profile for their own account.
+        if (!"ADMIN".equalsIgnoreCase(loggedInUser.getRole()) && !loggedInUser.getId().equals(request.getUserId())) {
+            throw new BusinessValidationException("Users can only register provider details for their own account.");
+        }
+
+        ProviderResponse provider = providerService.addProvider(request);
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("success", true);
+        payload.put("message", "Provider registered successfully.");
+        payload.put("provider", provider);
+        return ResponseEntity.status(HttpStatus.CREATED).body(payload);
+    }
 
     // Register as provider (for users who want to become providers)
     @PostMapping("/register")
     public String registerAsProvider(@RequestParam Long categoryId,
-                                   @RequestParam BigDecimal serviceCharge,
-                                   @RequestParam(required = false) String experience,
-                                   @RequestParam(required = false) String availability,
-                                   HttpSession session,
-                                   Model model) {
+                                     @RequestParam BigDecimal serviceCharge,
+                                     @RequestParam(required = false) String experience,
+                                     @RequestParam(required = false) String availability,
+                                     HttpSession session,
+                                     Model model) {
         User user = (User) session.getAttribute("loggedInUser");
         if (user == null) {
             return "redirect:/login";
@@ -50,18 +84,16 @@ public class ProviderController {
         }
     }
 
-    // Get providers by category
     @GetMapping("/byCategory/{categoryId}")
     @ResponseBody
-    public List<Provider> getProvidersByCategory(@PathVariable Long categoryId) {
-        return providerService.getProvidersByCategory(categoryId);
+    public List<ProviderResponse> getProvidersByCategory(@PathVariable Long categoryId) {
+        return providerService.getProviderResponsesByCategory(categoryId);
     }
 
-    // Get providers by location
     @GetMapping("/byLocation/{location}")
     @ResponseBody
-    public List<Provider> getProvidersByLocation(@PathVariable String location) {
-        return providerService.getProvidersByLocation(location);
+    public List<ProviderResponse> getProvidersByLocation(@PathVariable String location) {
+        return providerService.getProviderResponsesByLocation(location);
     }
 
     // Provider profile page
@@ -85,10 +117,10 @@ public class ProviderController {
     // Update provider profile
     @PostMapping("/profile/update")
     public String updateProviderProfile(@RequestParam Long providerId,
-                                      @RequestParam(required = false) String experience,
-                                      @RequestParam(required = false) String availability,
-                                      @RequestParam(required = false) BigDecimal serviceCharge,
-                                      HttpSession session) {
+                                        @RequestParam(required = false) String experience,
+                                        @RequestParam(required = false) String availability,
+                                        @RequestParam(required = false) BigDecimal serviceCharge,
+                                        HttpSession session) {
         User user = (User) session.getAttribute("loggedInUser");
         if (user == null || !"PROVIDER".equals(user.getRole())) {
             return "redirect:/login";
