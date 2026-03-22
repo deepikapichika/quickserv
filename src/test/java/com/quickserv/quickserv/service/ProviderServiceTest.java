@@ -38,6 +38,9 @@ class ProviderServiceTest {
     @Mock
     private CategoryRepository categoryRepository;
 
+    @Mock
+    private ServiceService serviceService;
+
     @InjectMocks
     private ProviderService providerService;
 

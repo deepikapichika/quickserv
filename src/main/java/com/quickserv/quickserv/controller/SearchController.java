@@ -1,14 +1,20 @@
 package com.quickserv.quickserv.controller;
 
-import com.quickserv.quickserv.entity.Provider;
+import com.quickserv.quickserv.dto.search.ServiceSearchResultDto;
 import com.quickserv.quickserv.entity.Category;
-import com.quickserv.quickserv.service.ProviderService;
 import com.quickserv.quickserv.service.CategoryService;
+import com.quickserv.quickserv.service.ServiceService;
+import com.quickserv.quickserv.service.SubcategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Controller
@@ -16,71 +22,63 @@ import java.util.List;
 public class SearchController {
 
     @Autowired
-    private ProviderService providerService;
+    private ServiceService serviceService;
 
     @Autowired
     private CategoryService categoryService;
 
-    // Advanced search with multiple filters
-    @GetMapping("/search")
+    @Autowired
+    private SubcategoryService subcategoryService;
+
+    @GetMapping(value = "/search", produces = MediaType.TEXT_HTML_VALUE)
     public String searchServices(@RequestParam(required = false) String location,
-                               @RequestParam(required = false) Long categoryId,
-                               @RequestParam(required = false) Double minRating,
-                               Model model) {
+                                 @RequestParam(required = false) Long categoryId,
+                                 @RequestParam(name = "subcategory_id", required = false) Long subcategoryId,
+                                 @RequestParam(required = false) BigDecimal minPrice,
+                                 @RequestParam(required = false) BigDecimal maxPrice,
+                                 @RequestParam(required = false) Double minRating,
+                                 Model model) {
 
-        List<Provider> providers;
-
-        // Apply filters based on parameters
-        if (categoryId != null && location != null && !location.trim().isEmpty()) {
-            // Search by both category and location
-            providers = providerService.getProvidersByCategoryAndLocation(categoryId, location);
-        } else if (categoryId != null) {
-            // Search by category only
-            providers = providerService.getProvidersByCategory(categoryId);
-        } else if (location != null && !location.trim().isEmpty()) {
-            // Search by location only
-            providers = providerService.getProvidersByLocation(location);
-        } else {
-            // No filters - return all providers
-            providers = providerService.getAllProviders();
-        }
-
-        // Filter by minimum rating if specified
-        if (minRating != null && minRating > 0) {
-            providers = providers.stream()
-                    .filter(p -> p.getRating() >= minRating)
-                    .toList();
-        }
-
-        // Get all categories for the filter dropdown
+        List<ServiceSearchResultDto> searchResults = serviceService.searchDiscovery(
+                location,
+                categoryId,
+                subcategoryId,
+                minPrice,
+                maxPrice,
+                minRating
+        );
         List<Category> categories = categoryService.getAllCategories();
 
-        model.addAttribute("providers", providers);
+        model.addAttribute("searchResults", searchResults);
         model.addAttribute("categories", categories);
+        model.addAttribute("subcategories", subcategoryService.getAllSubcategories());
         model.addAttribute("selectedLocation", location);
         model.addAttribute("selectedCategoryId", categoryId);
+        model.addAttribute("selectedSubcategoryId", subcategoryId);
+        model.addAttribute("selectedMinPrice", minPrice);
+        model.addAttribute("selectedMaxPrice", maxPrice);
         model.addAttribute("minRating", minRating);
 
         return "search-results";
     }
 
-    // Quick search endpoint (for AJAX calls)
+    @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public List<ServiceSearchResultDto> searchServicesApi(@RequestParam(required = false) String location,
+                                                          @RequestParam(required = false) Long categoryId,
+                                                          @RequestParam(name = "subcategory_id", required = false) Long subcategoryId,
+                                                          @RequestParam(required = false) BigDecimal minPrice,
+                                                          @RequestParam(required = false) BigDecimal maxPrice,
+                                                          @RequestParam(required = false) Double minRating) {
+        return serviceService.searchDiscovery(location, categoryId, subcategoryId, minPrice, maxPrice, minRating);
+    }
+
     @GetMapping("/quick-search")
     @ResponseBody
-    public List<Provider> quickSearch(@RequestParam(required = false) String query,
-                                    @RequestParam(required = false) Long categoryId) {
-        if (query != null && !query.trim().isEmpty()) {
-            // Search by location
-            return providerService.getProvidersByLocation(query);
-        } else if (categoryId != null) {
-            // Search by category
-            return providerService.getProvidersByCategory(categoryId);
-        } else {
-            // Return top rated providers
-            return providerService.getAllProviders().stream()
-                    .filter(p -> p.getRating() >= 4.0)
-                    .limit(10)
-                    .toList();
-        }
+    public List<ServiceSearchResultDto> quickSearch(@RequestParam(required = false) String query,
+                                                    @RequestParam(required = false) Long categoryId,
+                                                    @RequestParam(name = "subcategory_id", required = false) Long subcategoryId,
+                                                    @RequestParam(required = false) BigDecimal maxPrice) {
+        return serviceService.searchDiscovery(query, categoryId, subcategoryId, null, maxPrice, null);
     }
 }

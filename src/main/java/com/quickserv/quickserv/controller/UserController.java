@@ -12,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -40,16 +41,19 @@ public class UserController {
                                @RequestParam(name = "categoryId", required = false) Long categoryIdAlt,
                                @RequestParam(required = false) List<Long> categoryIds,
                                @RequestParam(required = false) String categoryIdsCsv,
+                               @RequestParam(required = false) List<Long> serviceIds,
+                               @RequestParam(required = false) String serviceIdsCsv,
                                @RequestHeader(value = "X-Requested-With", required = false) String requestedWith,
                                HttpSession session,
                                Model model) {
         try {
             Long resolvedCategoryId = resolveCategoryId(categoryId, categoryIdAlt, categoryIds, categoryIdsCsv);
+            List<Long> resolvedServiceIds = resolveIds(serviceIds, serviceIdsCsv);
 
             User savedUser = userService.registerUser(user);
 
             if ("PROVIDER".equals(savedUser.getRole())) {
-                providerService.registerProviderFromRegistration(savedUser, resolvedCategoryId, categoryService);
+                providerService.registerProviderFromRegistration(savedUser, resolvedCategoryId, resolvedServiceIds, categoryService);
             }
 
             session.setAttribute("loggedInUser", savedUser);
@@ -154,5 +158,24 @@ public class UserController {
         }
         return null;
     }
-}
 
+    private List<Long> resolveIds(List<Long> ids, String idsCsv) {
+        List<Long> resolved = new ArrayList<>();
+        if (ids != null) {
+            resolved.addAll(ids.stream().filter(id -> id != null && id > 0).toList());
+        }
+
+        if (idsCsv != null && !idsCsv.trim().isEmpty()) {
+            String[] parts = idsCsv.split(",");
+            for (String part : parts) {
+                String trimmed = part.trim();
+                if (trimmed.isEmpty()) {
+                    continue;
+                }
+                resolved.add(Long.parseLong(trimmed));
+            }
+        }
+
+        return resolved.stream().distinct().toList();
+    }
+}

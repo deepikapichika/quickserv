@@ -336,6 +336,13 @@
         <p>Welcome, <span th:text="${user.name}">Admin</span> — manage users, providers and platform activity</p>
     </div>
 
+    <div th:if="${successMessage}" style="margin: 14px 0; padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(76,175,80,0.45); color: #d9ffd9; background: rgba(76,175,80,0.15);">
+        <span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" style="margin: 14px 0; padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(244,67,54,0.45); color: #ffd7d7; background: rgba(244,67,54,0.15);">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
     <!-- Identity Bar -->
     <div class="dashboard-header">
         <div class="user-info">

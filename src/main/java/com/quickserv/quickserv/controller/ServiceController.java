@@ -1,21 +1,31 @@
 package com.quickserv.quickserv.controller;
 
+import com.quickserv.quickserv.dto.booking.BookingCreateRequest;
 import com.quickserv.quickserv.entity.Booking;
 import com.quickserv.quickserv.entity.Category;
+import com.quickserv.quickserv.entity.Provider;
 import com.quickserv.quickserv.entity.ServiceListing;
+import com.quickserv.quickserv.entity.Subcategory;
 import com.quickserv.quickserv.entity.User;
 import com.quickserv.quickserv.service.BookingService;
 import com.quickserv.quickserv.service.CategoryService;
+import com.quickserv.quickserv.service.ProviderService;
 import com.quickserv.quickserv.service.ServiceService;
+import com.quickserv.quickserv.service.SubcategoryService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Controller
 public class ServiceController {
@@ -28,6 +38,12 @@ public class ServiceController {
 
     @Autowired
     private BookingService bookingService;
+
+    @Autowired
+    private ProviderService providerService;
+
+    @Autowired
+    private SubcategoryService subcategoryService;
 
     // ============= PROVIDER SECTION =============
 
@@ -47,13 +63,25 @@ public class ServiceController {
     // Show form to add new service
     @GetMapping("/provider/services/new")
     public String showAddServiceForm(HttpSession session, Model model) {
-        User provider = (User) session.getAttribute("loggedInUser");
-        if (provider == null || !"PROVIDER".equals(provider.getRole())) {
+        User providerUser = (User) session.getAttribute("loggedInUser");
+        if (providerUser == null || !"PROVIDER".equals(providerUser.getRole())) {
             return "redirect:/login";
         }
 
+        Provider provider = providerService.getProviderByUser(providerUser);
+        if (provider == null) {
+            return "redirect:/provider/dashboard";
+        }
+
+        Set<Category> providerCategories = resolveProviderCategories(provider);
+        Long defaultCategoryId = provider.getCategory() != null ? provider.getCategory().getId() : null;
+
         model.addAttribute("service", new ServiceListing());
-        model.addAttribute("categories", categoryService.getAllCategories());
+        model.addAttribute("categories", providerCategories);
+        model.addAttribute("providerCategoryId", defaultCategoryId);
+        model.addAttribute("subcategories", defaultCategoryId != null
+                ? subcategoryService.getByCategory(defaultCategoryId)
+                : List.of());
         return "service-form";
     }
 
@@ -61,16 +89,71 @@ public class ServiceController {
     @PostMapping("/provider/services/save")
     public String saveService(@ModelAttribute ServiceListing service,
                               @RequestParam Long categoryId,
-                              HttpSession session) {
-        User provider = (User) session.getAttribute("loggedInUser");
-        if (provider == null || !"PROVIDER".equals(provider.getRole())) {
+                              @RequestParam(required = false) Long subcategoryId,
+                              @RequestParam(required = false) String availableTime,
+                              @RequestParam(required = false) BigDecimal discountPercent,
+                              @RequestParam(required = false) String couponCode,
+                              HttpSession session,
+                              Model model) {
+        return addServiceForProvider(service, categoryId, subcategoryId, availableTime, discountPercent, couponCode, session, model);
+    }
+
+    @PostMapping("/provider/add-service")
+    public String addServiceForProvider(@ModelAttribute ServiceListing service,
+                                        @RequestParam Long categoryId,
+                                        @RequestParam(required = false) Long subcategoryId,
+                                        @RequestParam(required = false) String availableTime,
+                                        @RequestParam(required = false) BigDecimal discountPercent,
+                                        @RequestParam(required = false) String couponCode,
+                                        HttpSession session,
+                                        Model model) {
+        User providerUser = (User) session.getAttribute("loggedInUser");
+        if (providerUser == null || !"PROVIDER".equals(providerUser.getRole())) {
             return "redirect:/login";
         }
 
+        Provider provider = providerService.getProviderByUser(providerUser);
+        if (provider == null) {
+            model.addAttribute("error", "Provider profile not found. Complete your provider profile first.");
+            return "redirect:/provider/dashboard";
+        }
+
+        if (!canProviderUseCategory(provider, categoryId)) {
+            model.addAttribute("error", "You can add services only in your assigned category.");
+            return "redirect:/provider/services/new";
+        }
+
         Category category = categoryService.getCategoryById(categoryId);
-        service.setProvider(provider);
+        service.setProvider(providerUser);
         service.setCategory(category);
         service.setIsAvailable(true);
+        service.setAvailableTime(cleanNullable(availableTime));
+        service.setDiscountPercent(discountPercent);
+        service.setCouponCode(cleanNullable(couponCode));
+
+        String normalizedLocations = normalizeLocations(service.getLocation());
+        service.setServiceLocations(normalizedLocations);
+        service.setLocation(extractPrimaryLocation(normalizedLocations));
+
+        if (subcategoryId != null) {
+            Subcategory subcategory = subcategoryService.getById(subcategoryId);
+            if (!subcategory.getCategory().getId().equals(categoryId)) {
+                model.addAttribute("error", "Selected subcategory does not belong to your category.");
+                return "redirect:/provider/services/new";
+            }
+            service.setSubcategory(subcategory);
+            if (service.getTitle() == null || service.getTitle().trim().isEmpty()) {
+                service.setTitle(subcategory.getName());
+            }
+            if (service.getDescription() == null || service.getDescription().trim().isEmpty()) {
+                service.setDescription("Service for " + subcategory.getName());
+            }
+        }
+
+        if (service.getTitle() == null || service.getTitle().trim().isEmpty()) {
+            model.addAttribute("error", "Service title is required.");
+            return "redirect:/provider/services/new";
+        }
 
         serviceService.saveService(service);
         return "redirect:/provider/services";
@@ -112,6 +195,10 @@ public class ServiceController {
     // Browse all services (with optional filters)
     @GetMapping("/browse")
     public String browseServices(@RequestParam(required = false) Long categoryId,
+                                 @RequestParam(required = false) Long subcategoryId,
+                                 @RequestParam(required = false) String location,
+                                 @RequestParam(required = false) BigDecimal minPrice,
+                                 @RequestParam(required = false) BigDecimal maxPrice,
                                  @RequestParam(required = false) String search,
                                  Model model,
                                  HttpSession session) {
@@ -121,20 +208,23 @@ public class ServiceController {
             return "redirect:/login";
         }
 
-        List<ServiceListing> services;
-
-        if (categoryId != null && categoryId > 0) {
-            Category category = categoryService.getCategoryById(categoryId);
-            services = serviceService.getServicesByCategory(category);
-        } else if (search != null && !search.isEmpty()) {
-            services = serviceService.searchServices(search);
-        } else {
-            services = serviceService.getAvailableServices();
-        }
+        List<ServiceListing> services = serviceService.browseServices(
+                search,
+                location,
+                categoryId,
+                subcategoryId,
+                minPrice,
+                maxPrice
+        );
 
         model.addAttribute("services", services);
         model.addAttribute("categories", categoryService.getAllCategories());
+        model.addAttribute("subcategories", subcategoryService.getAllSubcategories());
         model.addAttribute("selectedCategory", categoryId);
+        model.addAttribute("selectedSubcategory", subcategoryId);
+        model.addAttribute("selectedLocation", location);
+        model.addAttribute("selectedMinPrice", minPrice);
+        model.addAttribute("selectedMaxPrice", maxPrice);
         model.addAttribute("searchKeyword", search);
         model.addAttribute("user", user);
 
@@ -168,6 +258,8 @@ public class ServiceController {
 
         model.addAttribute("service", service);
         model.addAttribute("user", user);
+        model.addAttribute("availableAddons", getAddonsForService(service));
+        model.addAttribute("availableCoupons", getCouponsForService(service));
         return "service-detail";
     }
 
@@ -178,8 +270,12 @@ public class ServiceController {
     public String createBooking(@PathVariable Long id,
                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime bookingDateTime,
                                @RequestParam(required = false) String notes,
+                               @RequestParam(required = false) String address,
+                               @RequestParam String paymentMethod,
+                               @RequestParam(required = false) List<Long> addonIds,
+                               @RequestParam(required = false) String couponCode,
                                HttpSession session,
-                               Model model) {
+                               RedirectAttributes redirectAttributes) {
         User customer = (User) session.getAttribute("loggedInUser");
         if (customer == null || !"CUSTOMER".equals(customer.getRole())) {
             return "redirect:/login";
@@ -187,16 +283,36 @@ public class ServiceController {
 
         ServiceListing service = serviceService.getServiceById(id);
         if (service == null || !service.getIsAvailable()) {
-            model.addAttribute("error", "Service not available");
+            redirectAttributes.addFlashAttribute("bookingErrorMessage", "Service not available");
             return "redirect:/service/" + id;
         }
 
         try {
-            Booking booking = bookingService.createBooking(customer, service, bookingDateTime, notes);
-            model.addAttribute("success", "Booking created successfully!");
-            return "redirect:/customer/bookings";
+            BookingCreateRequest request = new BookingCreateRequest();
+            request.setServiceId(id);
+            request.setBookingDateTime(bookingDateTime);
+            request.setPaymentMethod(paymentMethod);
+            request.setCouponCode(couponCode);
+            request.setAddonIds(addonIds);
+
+            // Preserve existing notes field and append optional address for provider visibility.
+            StringBuilder combinedNotes = new StringBuilder();
+            if (notes != null && !notes.trim().isEmpty()) {
+                combinedNotes.append(notes.trim());
+            }
+            if (address != null && !address.trim().isEmpty()) {
+                if (combinedNotes.length() > 0) {
+                    combinedNotes.append("\n");
+                }
+                combinedNotes.append("Address: ").append(address.trim());
+            }
+            request.setCustomerNotes(combinedNotes.length() > 0 ? combinedNotes.toString() : null);
+
+            bookingService.createBooking(customer, request);
+            redirectAttributes.addFlashAttribute("bookingSuccessMessage", "Your booking is successful!");
+            return "redirect:/service/" + id;
         } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute("bookingErrorMessage", e.getMessage());
             return "redirect:/service/" + id;
         }
     }
@@ -253,5 +369,126 @@ public class ServiceController {
         }
 
         return "redirect:/provider/bookings";
+    }
+
+    private Set<Category> resolveProviderCategories(Provider provider) {
+        Set<Category> categories = new LinkedHashSet<>();
+        if (provider.getSelectedCategories() != null) {
+            categories.addAll(provider.getSelectedCategories());
+        }
+        if (provider.getCategory() != null) {
+            categories.add(provider.getCategory());
+        }
+        return categories;
+    }
+
+    private boolean canProviderUseCategory(Provider provider, Long categoryId) {
+        return resolveProviderCategories(provider).stream().anyMatch(cat -> cat.getId().equals(categoryId));
+    }
+
+    private String cleanNullable(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
+    }
+
+    private String normalizeLocations(String rawLocations) {
+        if (rawLocations == null || rawLocations.trim().isEmpty()) {
+            return null;
+        }
+
+        return List.of(rawLocations.split(",")).stream()
+                .map(String::trim)
+                .filter(part -> !part.isEmpty())
+                .distinct()
+                .reduce((left, right) -> left + "," + right)
+                .orElse(null);
+    }
+
+    private String extractPrimaryLocation(String normalizedLocations) {
+        if (normalizedLocations == null || normalizedLocations.isEmpty()) {
+            return null;
+        }
+        return normalizedLocations.split(",")[0].trim();
+    }
+
+    private List<BookingAddonOption> getAddonsForService(ServiceListing service) {
+        List<BookingAddonOption> options = new ArrayList<>();
+
+        // Keep IDs aligned with BookingService price lookup.
+        options.add(new BookingAddonOption(1L, "Priority Visit", new BigDecimal("99")));
+        options.add(new BookingAddonOption(2L, "Tools and Materials", new BigDecimal("149")));
+
+        if (service.getCategory() != null && service.getCategory().getName() != null) {
+            String categoryName = service.getCategory().getName().toLowerCase();
+            if (categoryName.contains("clean")) {
+                options.add(new BookingAddonOption(3L, "Deep Cleaning Kit", new BigDecimal("199")));
+            } else if (categoryName.contains("ac")) {
+                options.add(new BookingAddonOption(4L, "Filter Sanitization", new BigDecimal("249")));
+            } else {
+                options.add(new BookingAddonOption(5L, "Extended Support", new BigDecimal("129")));
+            }
+        }
+
+        return options;
+    }
+
+    private List<BookingCouponOption> getCouponsForService(ServiceListing service) {
+        List<BookingCouponOption> options = new ArrayList<>();
+        options.add(new BookingCouponOption("FIRST30", "FIRST30 - 30% off for first booking"));
+
+        if (service.getCouponCode() != null && !service.getCouponCode().trim().isEmpty()) {
+            String code = service.getCouponCode().trim().toUpperCase();
+            String label = code + " - provider coupon";
+            if (service.getDiscountPercent() != null) {
+                label = code + " - " + service.getDiscountPercent().stripTrailingZeros().toPlainString() + "% off";
+            }
+            options.add(new BookingCouponOption(code, label));
+        }
+
+        return options;
+    }
+
+    private static class BookingAddonOption {
+        private final Long id;
+        private final String name;
+        private final BigDecimal price;
+
+        private BookingAddonOption(Long id, String name, BigDecimal price) {
+            this.id = id;
+            this.name = name;
+            this.price = price;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public BigDecimal getPrice() {
+            return price;
+        }
+    }
+
+    private static class BookingCouponOption {
+        private final String code;
+        private final String label;
+
+        private BookingCouponOption(String code, String label) {
+            this.code = code;
+            this.label = label;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public String getLabel() {
+            return label;
+        }
     }
 }

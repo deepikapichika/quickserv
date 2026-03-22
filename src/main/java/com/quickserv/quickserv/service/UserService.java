@@ -1,10 +1,18 @@
 package com.quickserv.quickserv.service;
 
+import com.quickserv.quickserv.entity.Booking;
 import com.quickserv.quickserv.entity.User;
+import com.quickserv.quickserv.repository.BookingRepository;
+import com.quickserv.quickserv.repository.PaymentRepository;
+import com.quickserv.quickserv.repository.ProviderRepository;
+import com.quickserv.quickserv.repository.ReviewRepository;
+import com.quickserv.quickserv.repository.ServiceRepository;
 import com.quickserv.quickserv.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -18,11 +26,27 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final BookingRepository bookingRepository;
+    private final PaymentRepository paymentRepository;
+    private final ReviewRepository reviewRepository;
+    private final ServiceRepository serviceRepository;
+    private final ProviderRepository providerRepository;
 
-    // Constructor - Spring automatically provides both dependencies
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    // Constructor - Spring automatically provides all dependencies
+    public UserService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       BookingRepository bookingRepository,
+                       PaymentRepository paymentRepository,
+                       ReviewRepository reviewRepository,
+                       ServiceRepository serviceRepository,
+                       ProviderRepository providerRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.bookingRepository = bookingRepository;
+        this.paymentRepository = paymentRepository;
+        this.reviewRepository = reviewRepository;
+        this.serviceRepository = serviceRepository;
+        this.providerRepository = providerRepository;
     }
 
     public User registerUser(User user) {
@@ -72,8 +96,31 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    @Transactional
     public void deleteUserById(Long id) {
-        userRepository.deleteById(id);
+        User targetUser = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found."));
+
+        if ("ADMIN".equalsIgnoreCase(targetUser.getRole())) {
+            throw new RuntimeException("Admin users cannot be deleted.");
+        }
+
+        // Remove booking-linked rows first to satisfy foreign key constraints.
+        List<Booking> relatedBookings = bookingRepository.findByCustomerOrProvider(targetUser, targetUser);
+        List<Long> bookingIds = relatedBookings.stream().map(Booking::getId).toList();
+
+        if (!bookingIds.isEmpty()) {
+            paymentRepository.deleteByBookingIdIn(bookingIds);
+            reviewRepository.deleteByBookingIdIn(bookingIds);
+            bookingRepository.deleteByCustomerOrProvider(targetUser, targetUser);
+        }
+
+        // Remove direct user-owned rows.
+        reviewRepository.deleteByCustomerOrProvider(targetUser, targetUser);
+        serviceRepository.deleteByProvider(targetUser);
+        providerRepository.deleteByUser(targetUser);
+
+        userRepository.delete(targetUser);
     }
 
     private void validatePasswordPolicy(String password) {

@@ -21,9 +21,16 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     // Find bookings by status for a provider
     List<Booking> findByProviderAndStatusOrderByBookingDateTimeAsc(User provider, Booking.BookingStatus status);
 
+    // Find bookings by status for a customer
+    List<Booking> findByCustomerAndStatusOrderByBookingDateTimeDesc(User customer, Booking.BookingStatus status);
+
     // Find upcoming bookings for a provider
     @Query("SELECT b FROM Booking b WHERE b.provider = :provider AND b.bookingDateTime > :now AND b.status IN ('PENDING', 'CONFIRMED') ORDER BY b.bookingDateTime ASC")
     List<Booking> findUpcomingBookingsForProvider(@Param("provider") User provider, @Param("now") LocalDateTime now);
+
+    // Find upcoming bookings for a customer
+    @Query("SELECT b FROM Booking b WHERE b.customer = :customer AND b.bookingDateTime > :now AND b.status IN ('PENDING', 'CONFIRMED') ORDER BY b.bookingDateTime ASC")
+    List<Booking> findUpcomingBookingsForCustomer(@Param("customer") User customer, @Param("now") LocalDateTime now);
 
     // Find today's bookings for a provider
     @Query("SELECT b FROM Booking b WHERE b.provider = :provider AND b.bookingDateTime >= :startOfDay AND b.bookingDateTime < :endOfDay ORDER BY b.bookingDateTime ASC")
@@ -35,4 +42,17 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     long countConflictingBookings(@Param("provider") User provider,
                                  @Param("startTime") LocalDateTime startTime,
                                  @Param("endTime") LocalDateTime endTime);
+
+    // Find bookings by coupon code
+    @Query("SELECT b FROM Booking b WHERE b.couponCode = :couponCode")
+    List<Booking> findByCouponCode(@Param("couponCode") String couponCode);
+
+    // Find bookings by customer or provider
+    List<Booking> findByCustomerOrProvider(User customer, User provider);
+
+    // Count bookings by customer or provider
+    long countByCustomerOrProvider(User customer, User provider);
+
+    // Delete bookings by customer or provider
+    void deleteByCustomerOrProvider(User customer, User provider);
 }

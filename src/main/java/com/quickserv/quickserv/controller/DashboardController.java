@@ -17,6 +17,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -101,10 +102,40 @@ public class DashboardController {
     }
 
     @PostMapping("/admin/users/delete/{id}")
-    public String deleteUser(@PathVariable Long id, HttpSession session) {
+    public String deleteUser(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         User admin = (User) session.getAttribute("loggedInUser");
         if (admin == null || !"ADMIN".equals(admin.getRole())) return "redirect:/login";
-        userService.deleteUserById(id);
+
+        if (admin.getId().equals(id)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You cannot delete your own admin account.");
+            return "redirect:/admin/dashboard";
+        }
+
+        try {
+            userService.deleteUserById(id);
+            redirectAttributes.addFlashAttribute("successMessage", "User deleted successfully.");
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
         return "redirect:/admin/dashboard";
+    }
+
+    /**
+     * Display customer's bookings (My Bookings page)
+     */
+    @GetMapping("/customer/bookings")
+    public String getMyBookings(HttpSession session, Model model) {
+        User customer = (User) session.getAttribute("loggedInUser");
+        if (customer == null) {
+            return "redirect:/login";
+        }
+        if (!"CUSTOMER".equals(customer.getRole())) {
+            return "redirect:/dashboard";
+        }
+
+        List<Booking> bookings = bookingService.getCustomerBookings(customer);
+        model.addAttribute("bookings", bookings);
+        model.addAttribute("user", customer);
+        return "customer-bookings";
     }
 }

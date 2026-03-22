@@ -28,11 +28,18 @@ public class ServiceListing {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
+    @ManyToOne
+    @JoinColumn(name = "subcategory_id")
+    private Subcategory subcategory;
+
     private BigDecimal price;
 
     private String priceUnit; // "per hour", "per visit", "fixed"
 
     private String location;
+
+    @Column(name = "service_locations", length = 1000)
+    private String serviceLocations;
 
     private String imageUrl;
 
@@ -41,6 +48,15 @@ public class ServiceListing {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    @Column(name = "available_time")
+    private String availableTime;
+
+    @Column(name = "discount_percent")
+    private BigDecimal discountPercent;
+
+    @Column(name = "coupon_code")
+    private String couponCode;
 
     @PrePersist
     protected void onCreate() {
@@ -72,6 +88,14 @@ public class ServiceListing {
     public Category getCategory() { return category; }
     public void setCategory(Category category) { this.category = category; }
 
+    public Subcategory getSubcategory() {
+        return subcategory;
+    }
+
+    public void setSubcategory(Subcategory subcategory) {
+        this.subcategory = subcategory;
+    }
+
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
 
@@ -84,6 +108,14 @@ public class ServiceListing {
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
+    public String getServiceLocations() {
+        return serviceLocations;
+    }
+
+    public void setServiceLocations(String serviceLocations) {
+        this.serviceLocations = serviceLocations;
+    }
+
     public Boolean getIsAvailable() { return isAvailable; }
     public void setIsAvailable(Boolean isAvailable) { this.isAvailable = isAvailable; }
 
@@ -92,4 +124,28 @@ public class ServiceListing {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getAvailableTime() {
+        return availableTime;
+    }
+
+    public void setAvailableTime(String availableTime) {
+        this.availableTime = availableTime;
+    }
+
+    public BigDecimal getDiscountPercent() {
+        return discountPercent;
+    }
+
+    public void setDiscountPercent(BigDecimal discountPercent) {
+        this.discountPercent = discountPercent;
+    }
+
+    public String getCouponCode() {
+        return couponCode;
+    }
+
+    public void setCouponCode(String couponCode) {
+        this.couponCode = couponCode;
+    }
 }

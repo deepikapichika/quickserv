@@ -7,8 +7,10 @@ USE quickserv;
 
 -- Drop existing tables if they exist (to avoid conflicts)
 DROP TABLE IF EXISTS bookings;
+DROP TABLE IF EXISTS provider_categories;
 DROP TABLE IF EXISTS providers;
 DROP TABLE IF EXISTS services;
+DROP TABLE IF EXISTS subcategories;
 DROP TABLE IF EXISTS categories;
 DROP TABLE IF EXISTS users;
 
@@ -39,9 +41,13 @@ CREATE TABLE services (
     description TEXT,
     provider_id BIGINT NOT NULL,
     category_id BIGINT NOT NULL,
+    subcategory_id BIGINT NULL,
     price DECIMAL(10,2),
     price_unit VARCHAR(50) DEFAULT 'per hour',
     location VARCHAR(255),
+    available_time VARCHAR(255),
+    discount_percent DECIMAL(5,2),
+    coupon_code VARCHAR(100),
     image_url VARCHAR(500),
     is_available BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -49,6 +55,17 @@ CREATE TABLE services (
     FOREIGN KEY (provider_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (category_id) REFERENCES categories(id)
 );
+
+CREATE TABLE subcategories (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    category_id BIGINT NOT NULL,
+    UNIQUE KEY uq_subcategory_name_per_category (name, category_id),
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+);
+
+ALTER TABLE services
+    ADD CONSTRAINT fk_services_subcategory FOREIGN KEY (subcategory_id) REFERENCES subcategories(id);
 
 -- Create providers table
 CREATE TABLE providers (
@@ -60,8 +77,17 @@ CREATE TABLE providers (
     availability VARCHAR(255) DEFAULT 'Mon-Sun 9AM-6PM',
     rating DOUBLE DEFAULT 0.0,
     total_reviews INT DEFAULT 0,
+    provider_locations VARCHAR(1000),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
+CREATE TABLE provider_categories (
+    provider_id BIGINT NOT NULL,
+    category_id BIGINT NOT NULL,
+    PRIMARY KEY (provider_id, category_id),
+    FOREIGN KEY (provider_id) REFERENCES providers(provider_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 );
 
 -- Create bookings table
@@ -107,3 +133,47 @@ INSERT INTO providers (user_id, category_id, experience, service_charge, availab
 INSERT INTO services (title, description, provider_id, category_id, price, location) VALUES
 ('Electrical Wiring', 'Complete home electrical wiring and installation', 2, 1, 500.00, 'Mumbai'),
 ('Pipe Repair', 'Emergency pipe repair and maintenance', 3, 2, 400.00, 'Delhi');
+
+-- Insert sample subcategories
+INSERT INTO subcategories (name, category_id)
+SELECT 'AC Installation', c.id FROM categories c WHERE c.name = 'AC Repair'
+UNION ALL SELECT 'AC Repair', c.id FROM categories c WHERE c.name = 'AC Repair'
+UNION ALL SELECT 'AC Gas Refill', c.id FROM categories c WHERE c.name = 'AC Repair'
+UNION ALL SELECT 'AC Maintenance', c.id FROM categories c WHERE c.name = 'AC Repair'
+UNION ALL SELECT 'Hair Cut', c.id FROM categories c WHERE c.name = 'Beautician'
+UNION ALL SELECT 'Hair Spa', c.id FROM categories c WHERE c.name = 'Beautician'
+UNION ALL SELECT 'Facial', c.id FROM categories c WHERE c.name = 'Beautician'
+UNION ALL SELECT 'Manicure', c.id FROM categories c WHERE c.name = 'Beautician'
+UNION ALL SELECT 'Pedicure', c.id FROM categories c WHERE c.name = 'Beautician'
+UNION ALL SELECT 'Bridal Makeup', c.id FROM categories c WHERE c.name = 'Beautician'
+UNION ALL SELECT 'Threading', c.id FROM categories c WHERE c.name = 'Beautician'
+UNION ALL SELECT 'Waxing', c.id FROM categories c WHERE c.name = 'Beautician'
+UNION ALL SELECT 'Furniture Repair', c.id FROM categories c WHERE c.name = 'Carpenter'
+UNION ALL SELECT 'Door Installation', c.id FROM categories c WHERE c.name = 'Carpenter'
+UNION ALL SELECT 'Window Repair', c.id FROM categories c WHERE c.name = 'Carpenter'
+UNION ALL SELECT 'Custom Furniture', c.id FROM categories c WHERE c.name = 'Carpenter'
+UNION ALL SELECT 'Cabinet Fixing', c.id FROM categories c WHERE c.name = 'Carpenter'
+UNION ALL SELECT 'Home Deep Cleaning', c.id FROM categories c WHERE c.name = 'Cleaner'
+UNION ALL SELECT 'Kitchen Cleaning', c.id FROM categories c WHERE c.name = 'Cleaner'
+UNION ALL SELECT 'Bathroom Cleaning', c.id FROM categories c WHERE c.name = 'Cleaner'
+UNION ALL SELECT 'Sofa Cleaning', c.id FROM categories c WHERE c.name = 'Cleaner'
+UNION ALL SELECT 'Carpet Cleaning', c.id FROM categories c WHERE c.name = 'Cleaner'
+UNION ALL SELECT 'Fan Installation', c.id FROM categories c WHERE c.name = 'Electrician'
+UNION ALL SELECT 'Light Installation', c.id FROM categories c WHERE c.name = 'Electrician'
+UNION ALL SELECT 'Switch Repair', c.id FROM categories c WHERE c.name = 'Electrician'
+UNION ALL SELECT 'Wiring Repair', c.id FROM categories c WHERE c.name = 'Electrician'
+UNION ALL SELECT 'Inverter Installation', c.id FROM categories c WHERE c.name = 'Electrician'
+UNION ALL SELECT 'House Shifting', c.id FROM categories c WHERE c.name = 'Moving & Shifting'
+UNION ALL SELECT 'Office Shifting', c.id FROM categories c WHERE c.name = 'Moving & Shifting'
+UNION ALL SELECT 'Packing & Unpacking', c.id FROM categories c WHERE c.name = 'Moving & Shifting'
+UNION ALL SELECT 'Loading & Unloading', c.id FROM categories c WHERE c.name = 'Moving & Shifting'
+UNION ALL SELECT 'Interior Painting', c.id FROM categories c WHERE c.name = 'Painter'
+UNION ALL SELECT 'Exterior Painting', c.id FROM categories c WHERE c.name = 'Painter'
+UNION ALL SELECT 'Wall Texture Design', c.id FROM categories c WHERE c.name = 'Painter'
+UNION ALL SELECT 'Wallpaper Installation', c.id FROM categories c WHERE c.name = 'Painter'
+UNION ALL SELECT 'Waterproofing', c.id FROM categories c WHERE c.name = 'Painter'
+UNION ALL SELECT 'Tap Repair', c.id FROM categories c WHERE c.name = 'Plumber'
+UNION ALL SELECT 'Pipe Leakage Fix', c.id FROM categories c WHERE c.name = 'Plumber'
+UNION ALL SELECT 'Toilet Repair', c.id FROM categories c WHERE c.name = 'Plumber'
+UNION ALL SELECT 'Drain Cleaning', c.id FROM categories c WHERE c.name = 'Plumber'
+UNION ALL SELECT 'Water Motor Repair', c.id FROM categories c WHERE c.name = 'Plumber';

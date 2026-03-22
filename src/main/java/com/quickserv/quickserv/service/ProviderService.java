@@ -22,13 +22,16 @@ public class ProviderService {
     private final ProviderRepository providerRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final ServiceService serviceService;
 
     public ProviderService(ProviderRepository providerRepository,
                            UserRepository userRepository,
-                           CategoryRepository categoryRepository) {
+                           CategoryRepository categoryRepository,
+                           ServiceService serviceService) {
         this.providerRepository = providerRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
+        this.serviceService = serviceService;
     }
 
     public ProviderResponse addProvider(ProviderCreateRequest request) {
@@ -56,6 +59,12 @@ public class ProviderService {
         provider.setSelectedCategories(new LinkedHashSet<>(List.of(category)));
 
         Provider saved = providerRepository.save(provider);
+        serviceService.assignServicesToProvider(
+                saved.getUser(),
+                category,
+                request.getServiceIds(),
+                saved.getServiceCharge()
+        );
         return toResponse(saved);
     }
 
@@ -71,6 +80,7 @@ public class ProviderService {
 
     public Provider registerProviderFromRegistration(User user,
                                                      Long categoryId,
+                                                     List<Long> serviceIds,
                                                      CategoryService categoryService) {
         if (categoryId == null) {
             throw new BusinessValidationException("Please select a service category.");
@@ -81,8 +91,15 @@ public class ProviderService {
         request.setCategoryId(categoryId);
         request.setServiceCharge(BigDecimal.ZERO);
         request.setAvailability("Flexible");
+        request.setServiceIds(serviceIds);
         return providerRepository.findById(addProvider(request).getProviderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Provider was not created."));
+    }
+
+    public Provider registerProviderFromRegistration(User user,
+                                                     Long categoryId,
+                                                     CategoryService categoryService) {
+        return registerProviderFromRegistration(user, categoryId, List.of(), categoryService);
     }
 
     public Provider getProviderByUser(User user) {

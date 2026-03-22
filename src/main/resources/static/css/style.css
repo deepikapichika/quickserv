@@ -47,6 +47,34 @@ body {
     --qs-select-text: #ffffff;
 }
 
+/* Global form text visibility on dark theme */
+input,
+textarea,
+select,
+.form-control,
+.form-select,
+input:focus,
+textarea:focus,
+select:focus,
+.form-control:focus,
+.form-select:focus,
+input:active,
+textarea:active,
+select:active,
+.form-control:active,
+.form-select:active {
+    color: #ffffff !important;
+    caret-color: #ffffff;
+}
+
+input::placeholder,
+textarea::placeholder,
+.form-control::placeholder,
+.form-select::placeholder {
+    color: rgba(255, 255, 255, 0.65) !important;
+    opacity: 1;
+}
+
 select,
 select.form-control,
 select.form-select,

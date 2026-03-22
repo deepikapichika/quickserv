@@ -492,14 +492,24 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">Minimum Rating</label>
-        <select name="minRating" class="form-select">
-          <option value="">Any Rating</option>
-          <option value="4.5" th:selected="${minRating == 4.5}">4.5+ Stars</option>
-          <option value="4.0" th:selected="${minRating == 4.0}">4.0+ Stars</option>
-          <option value="3.5" th:selected="${minRating == 3.5}">3.5+ Stars</option>
-          <option value="3.0" th:selected="${minRating == 3.0}">3.0+ Stars</option>
+        <label class="form-label">Subcategory</label>
+        <select name="subcategory_id" class="form-select">
+          <option value="">All Subcategories</option>
+          <option th:each="sub : ${subcategories}"
+                  th:value="${sub.id}"
+                  th:text="${sub.name}"
+                  th:selected="${sub.id == selectedSubcategoryId}"></option>
         </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Min Price</label>
+        <input type="number" min="0" step="1" name="minPrice" th:value="${selectedMinPrice}" placeholder="e.g. 200" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Max Price</label>
+        <input type="number" min="0" step="1" name="maxPrice" th:value="${selectedMaxPrice}" placeholder="e.g. 700" class="form-control">
       </div>
 
       <div class="form-group">
@@ -511,59 +521,54 @@
   <!-- Results Section -->
   <div class="results-section">
     <div class="results-header">
-      <div class="results-count" th:if="${not #lists.isEmpty(providers)}">
-        Found <span th:text="${#lists.size(providers)}">0</span> service provider(s)
+      <div class="results-count" th:if="${not #lists.isEmpty(searchResults)}">
+        Found <span th:text="${#lists.size(searchResults)}">0</span> matching service(s)
       </div>
     </div>
 
-    <div class="providers-grid" th:if="${not #lists.isEmpty(providers)}">
-      <div class="provider-card" th:each="provider : ${providers}">
+    <div class="providers-grid" th:if="${not #lists.isEmpty(searchResults)}">
+      <div class="provider-card" th:each="result : ${searchResults}">
         <div class="provider-header">
-          <h3 class="provider-name" th:text="${provider.user.name}">Provider Name</h3>
-          <div class="provider-category" th:text="${provider.category.name}">Category</div>
+          <h3 class="provider-name" th:text="${result.providerName}">Provider Name</h3>
+          <div class="provider-category" th:text="${result.categoryName}">Category</div>
           <div class="rating-stars">
             <div class="stars">
               <i class="fas fa-star" th:each="star : ${#numbers.sequence(1, 5)}"
-                 th:classappend="${star <= provider.rating} ? '' : 'far'"></i>
+                 th:classappend="${star <= result.providerRating} ? '' : 'far'"></i>
             </div>
-            <span class="rating-text" th:text="${provider.rating} + ' (' + ${provider.totalReviews} + ' reviews)'">4.5 (12 reviews)</span>
+            <span class="rating-text" th:text="${#numbers.formatDecimal(result.providerRating,1,1)} + ' rating'">4.5 rating</span>
           </div>
         </div>
 
         <div class="provider-body">
           <div class="provider-charge">
-            ₹<span th:text="${provider.serviceCharge}">500</span>
+            Rs. <span th:text="${result.servicePrice}">500</span>
           </div>
 
           <div class="provider-info">
             <div class="info-item">
-              <div class="info-label">Experience</div>
-              <div class="info-value" th:text="${provider.experience != null ? provider.experience : 'Not specified'}">5+ years</div>
+              <div class="info-label">Service</div>
+              <div class="info-value" th:text="${result.serviceName}">Service name</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Subcategory</div>
+              <div class="info-value" th:text="${result.subcategoryName != null ? result.subcategoryName : 'General'}">Subcategory</div>
             </div>
             <div class="info-item">
               <div class="info-label">Location</div>
-              <div class="info-value" th:text="${provider.user.location}">Mumbai</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Availability</div>
-              <div class="info-value" th:text="${provider.availability}">Mon-Fri 9AM-6PM</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Phone</div>
-              <div class="info-value" th:text="${provider.user.phone != null ? provider.user.phone : 'Not provided'}">+91 9876543210</div>
+              <div class="info-value" th:text="${result.location != null ? result.location : 'Not specified'}">Mumbai</div>
             </div>
           </div>
 
           <div class="provider-actions">
-            <a th:href="@{'/provider/profile/' + ${provider.providerId}}" class="btn-view-profile">View Profile</a>
-            <a th:href="@{'/service/' + ${provider.providerId}}" class="btn-book-now">Book Now</a>
+            <a th:href="@{'/provider/profile/' + ${result.providerId}}" class="btn-view-profile">View Profile</a>
+            <a th:href="${result.bookUrl}" class="btn-book-now">Book Now</a>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- No Results -->
-    <div class="no-results" th:unless="${not #lists.isEmpty(providers)}">
+    <div class="no-results" th:unless="${not #lists.isEmpty(searchResults)}">
       <i class="fas fa-search"></i>
       <h3>No providers found</h3>
       <p>Try adjusting your search criteria or browse all available services</p>

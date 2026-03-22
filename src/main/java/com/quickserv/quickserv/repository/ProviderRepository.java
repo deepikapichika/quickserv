@@ -59,4 +59,6 @@ public interface ProviderRepository extends JpaRepository<Provider, Long> {
     List<Provider> findTop10ByOrderByRatingDesc();
 
     List<Provider> findByRatingGreaterThanEqual(Double rating);
+
+    void deleteByUser(User user);
 }

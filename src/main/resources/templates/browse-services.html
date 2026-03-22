@@ -51,13 +51,17 @@
     <!-- Search Section -->
     <div class="search-card">
         <h2 class="search-title">Search Services</h2>
-        <form action="/browse" method="get" class="row g-3">
-            <div class="col-md-5">
+        <form action="/browse" method="get" class="row g-3" id="browseFilterForm">
+            <div class="col-md-3">
                 <input type="text" name="search" class="form-control search-input"
                        placeholder="Search services..." th:value="${searchKeyword}">
             </div>
-            <div class="col-md-4">
-                <select name="categoryId" class="form-control search-select">
+            <div class="col-md-3">
+                <input type="text" name="location" class="form-control search-input"
+                       placeholder="Location" th:value="${selectedLocation}">
+            </div>
+            <div class="col-md-3">
+                <select id="categoryFilter" name="categoryId" class="form-control search-select">
                     <option value="">All Categories</option>
                     <option th:each="cat : ${categories}"
                             th:value="${cat.id}"
@@ -66,9 +70,30 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <button type="submit" class="btn btn-search">
-                    <i class="fas fa-search"></i> Search
+                <select id="subcategoryFilter" name="subcategoryId" class="form-control search-select">
+                    <option value="">All Subcategories</option>
+                    <option th:each="sub : ${subcategories}"
+                            th:value="${sub.id}"
+                            th:data-category-id="${sub.category.id}"
+                            th:text="${sub.name}"
+                            th:selected="${selectedSubcategory == sub.id}"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="number" min="0" step="1" name="minPrice" class="form-control search-input"
+                       placeholder="Min Price" th:value="${selectedMinPrice}">
+            </div>
+            <div class="col-md-3">
+                <input type="number" min="0" step="1" name="maxPrice" class="form-control search-input"
+                       placeholder="Max Price" th:value="${selectedMaxPrice}">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-search w-100">
+                    <i class="fas fa-search"></i> Apply Filters
                 </button>
+            </div>
+            <div class="col-md-3">
+                <a href="/browse" class="btn btn-outline-light w-100">Clear</a>
             </div>
         </form>
     </div>
@@ -87,8 +112,14 @@
                     <p class="service-provider">
                         <i class="fas fa-user"></i> <span th:text="${service.provider.name}">Provider Name</span>
                     </p>
+                    <p class="service-provider">
+                        <i class="fas fa-tag"></i>
+                        <span th:text="${service.category.name}">Category</span>
+                        <span th:if="${service.subcategory != null}">- <span th:text="${service.subcategory.name}">Subcategory</span></span>
+                    </p>
                     <p class="service-location">
-                        <i class="fas fa-map-marker-alt"></i> <span th:text="${service.location}">Location</span>
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span th:text="${service.serviceLocations != null ? service.serviceLocations : service.location}">Location</span>
                     </p>
                 </div>
                 <div class="col-md-4 text-center">
@@ -108,6 +139,37 @@
     </div>
 </div>
 
+<script>
+    const categoryFilter = document.getElementById('categoryFilter');
+    const subcategoryFilter = document.getElementById('subcategoryFilter');
+
+    function syncSubcategoryOptions() {
+        const selectedCategoryId = categoryFilter.value;
+        const currentSubcategoryId = subcategoryFilter.value;
+
+        Array.from(subcategoryFilter.options).forEach((option) => {
+            if (!option.value) {
+                option.hidden = false;
+                return;
+            }
+
+            const optionCategoryId = option.getAttribute('data-category-id');
+            const shouldShow = !selectedCategoryId || optionCategoryId === selectedCategoryId;
+            option.hidden = !shouldShow;
+
+            if (!shouldShow && option.selected) {
+                option.selected = false;
+            }
+        });
+
+        if (currentSubcategoryId && !Array.from(subcategoryFilter.options).some((o) => o.value === currentSubcategoryId && !o.hidden)) {
+            subcategoryFilter.value = '';
+        }
+    }
+
+    categoryFilter.addEventListener('change', syncSubcategoryOptions);
+    syncSubcategoryOptions();
+</script>
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

@@ -46,6 +46,13 @@
     <i class="fas fa-arrow-left"></i> Back to Services
   </a>
 
+  <div th:if="${bookingSuccessMessage}" class="alert alert-success" style="margin-bottom: 16px;">
+    <span th:text="${bookingSuccessMessage}"></span>
+  </div>
+  <div th:if="${bookingErrorMessage}" class="alert alert-danger" style="margin-bottom: 16px;">
+    <span th:text="${bookingErrorMessage}"></span>
+  </div>
+
   <!-- Detail Container -->
   <div class="detail-container">
     <!-- Service Icon -->
@@ -154,6 +161,80 @@
                    required>
           </div>
           <div class="mb-3">
+            <label class="form-label" style="color: #E0AAFF;">Address</label>
+            <input type="text" name="address" class="form-control"
+                   placeholder="Enter service address"
+                   style="background: rgba(16, 0, 43, 0.6); border: 1px solid rgba(224, 170, 255, 0.3); color: white;"
+                   required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" style="color: #E0AAFF;">Add-ons (Optional)</label>
+            <select name="addonIds" multiple class="form-control"
+                    style="background: rgba(16, 0, 43, 0.6); border: 1px solid rgba(224, 170, 255, 0.3); color: white; min-height: 120px;">
+              <option th:each="addon : ${availableAddons}"
+                      th:value="${addon.id}"
+                      th:text="${addon.name + ' - Rs.' + addon.price}">
+              </option>
+            </select>
+            <small style="color: rgba(224, 170, 255, 0.8);">Hold Ctrl/Cmd to select multiple add-ons</small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" style="color: #E0AAFF;">Payment Method</label>
+            <div class="payment-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <input type="radio" id="pmCard" name="paymentMethod" value="CARD" required hidden>
+              <label for="pmCard" class="payment-option" onclick="selectPaymentOption(this)"
+                     style="cursor:pointer; background: rgba(16, 0, 43, 0.6); border: 1px solid rgba(224, 170, 255, 0.3); color: white; border-radius: 10px; padding: 10px 12px;">
+                <i class="fas fa-credit-card"></i> Bank/Card
+              </label>
+
+              <input type="radio" id="pmUpi" name="paymentMethod" value="UPI" required hidden>
+              <label for="pmUpi" class="payment-option" onclick="selectPaymentOption(this)"
+                     style="cursor:pointer; background: rgba(16, 0, 43, 0.6); border: 1px solid rgba(224, 170, 255, 0.3); color: white; border-radius: 10px; padding: 10px 12px;">
+                <i class="fas fa-mobile-alt"></i> UPI
+              </label>
+
+              <input type="radio" id="pmCash" name="paymentMethod" value="CASH" required hidden>
+              <label for="pmCash" class="payment-option" onclick="selectPaymentOption(this)"
+                     style="cursor:pointer; background: rgba(16, 0, 43, 0.6); border: 1px solid rgba(224, 170, 255, 0.3); color: white; border-radius: 10px; padding: 10px 12px;">
+                <i class="fas fa-money-bill-wave"></i> Cash
+              </label>
+
+              <input type="radio" id="pmWallet" name="paymentMethod" value="WALLET" required hidden>
+              <label for="pmWallet" class="payment-option" onclick="selectPaymentOption(this)"
+                     style="cursor:pointer; background: rgba(16, 0, 43, 0.6); border: 1px solid rgba(224, 170, 255, 0.3); color: white; border-radius: 10px; padding: 10px 12px;">
+                <i class="fas fa-wallet"></i> Wallet
+              </label>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" style="color: #E0AAFF;">Coupon Code (Optional)</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input id="couponInput" type="text" name="couponCode" class="form-control" maxlength="20"
+                     placeholder="Enter coupon code"
+                     style="background: rgba(16, 0, 43, 0.6); border: 1px solid rgba(224, 170, 255, 0.3); color: white;">
+              <button type="button" class="btn btn-sm" onclick="applyCouponInput()"
+                      style="background: rgba(123,44,191,0.9); color: white; border: none;">Apply</button>
+            </div>
+            <div th:if="${availableCoupons != null and !availableCoupons.isEmpty()}" style="margin-top: 10px;">
+              <small style="color: rgba(224,170,255,0.9);">Available coupons:</small>
+              <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 8px;">
+                <button type="button"
+                        th:each="coupon : ${availableCoupons}"
+                        th:data-code="${coupon.code}"
+                        th:title="${coupon.label}"
+                        class="coupon-chip"
+                        onclick="pickCoupon(this)"
+                        style="border-radius: 16px; border: 1px solid rgba(224,170,255,0.35); background: rgba(123,44,191,0.25); color: #E0AAFF; padding: 4px 10px; font-size: 12px;">
+                  <span th:text="${coupon.code}"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
             <label class="form-label" style="color: #E0AAFF;">Additional Notes (Optional)</label>
             <textarea name="notes" class="form-control" rows="3" placeholder="Any special requirements..."
                       style="background: rgba(16, 0, 43, 0.6); border: 1px solid rgba(224, 170, 255, 0.3); color: white;"></textarea>
@@ -179,6 +260,32 @@
     modal.show();
   }
 
+  function selectPaymentOption(selectedLabel) {
+    document.querySelectorAll('.payment-option').forEach(function(label) {
+      label.style.borderColor = 'rgba(224, 170, 255, 0.3)';
+      label.style.background = 'rgba(16, 0, 43, 0.6)';
+    });
+    selectedLabel.style.borderColor = '#E0AAFF';
+    selectedLabel.style.background = 'rgba(123,44,191,0.4)';
+  }
+
+  function pickCoupon(button) {
+    const code = button.getAttribute('data-code');
+    const input = document.getElementById('couponInput');
+    if (input && code) {
+      input.value = code;
+    }
+  }
+
+  function applyCouponInput() {
+    const input = document.getElementById('couponInput');
+    if (!input || !input.value.trim()) {
+      alert('Please enter a coupon code');
+      return;
+    }
+    alert('Coupon code selected: ' + input.value.trim().toUpperCase());
+  }
+
   // Set minimum date to tomorrow
   document.addEventListener('DOMContentLoaded', function() {
     const dateInput = document.querySelector('input[name="bookingDateTime"]');
@@ -190,5 +297,12 @@
     }
   });
 </script>
+<script th:if="${bookingSuccessMessage}" th:inline="javascript">
+  alert([[${bookingSuccessMessage}]]);
+</script>
+<script th:if="${bookingErrorMessage}" th:inline="javascript">
+  alert([[${bookingErrorMessage}]]);
+</script>
 </body>
 </html>
+

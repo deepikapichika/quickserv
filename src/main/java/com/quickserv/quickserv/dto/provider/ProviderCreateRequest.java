@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public class ProviderCreateRequest {
 
@@ -22,6 +23,8 @@ public class ProviderCreateRequest {
 
     @Size(max = 255, message = "availability must be at most 255 characters")
     private String availability;
+
+    private List<Long> serviceIds;
 
     public Long getUserId() {
         return userId;
@@ -62,5 +65,12 @@ public class ProviderCreateRequest {
     public void setAvailability(String availability) {
         this.availability = availability;
     }
-}
 
+    public List<Long> getServiceIds() {
+        return serviceIds;
+    }
+
+    public void setServiceIds(List<Long> serviceIds) {
+        this.serviceIds = serviceIds;
+    }
+}

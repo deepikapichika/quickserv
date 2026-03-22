@@ -467,6 +467,33 @@
       border-top: 1px solid rgba(224, 170, 255, 0.1);
     }
 
+    /* Quick Add Service Section */
+    .quick-add-service {
+      background: rgba(22, 0, 50, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(224, 170, 255, 0.2);
+      border-radius: 15px;
+      padding: 24px;
+      margin-bottom: 35px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .quick-add-service h3 {
+      color: #E0AAFF;
+      font-size: 22px;
+      margin: 0 0 6px;
+    }
+
+    .quick-add-service p {
+      color: rgba(224, 170, 255, 0.75);
+      margin: 0;
+      font-size: 14px;
+    }
+
     /* Responsive */
     @media (max-width: 1024px) {
       .stats-grid {
@@ -611,6 +638,17 @@ class="background-img" alt="Background">
       <div class="stat-number">4.8</div>
       <a href="#" class="btn">Details</a>
     </div>
+  </div>
+
+  <!-- Add Service Section -->
+  <div class="quick-add-service">
+    <div>
+      <h3>Add Service</h3>
+      <p>Add your services here. Subcategories are selected on the Add Service form based on your category.</p>
+    </div>
+    <a href="/provider/services/new" class="btn-primary">
+      <i class="fas fa-plus-circle"></i> Add Service
+    </a>
   </div>
 
   <!-- Recent Services Section -->
