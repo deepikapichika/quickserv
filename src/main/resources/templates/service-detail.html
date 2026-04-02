@@ -239,6 +239,44 @@
             <textarea name="notes" class="form-control" rows="3" placeholder="Any special requirements..."
                       style="background: rgba(16, 0, 43, 0.6); border: 1px solid rgba(224, 170, 255, 0.3); color: white;"></textarea>
           </div>
+
+          <!-- Pricing Breakdown Section -->
+          <div class="mb-3" style="background: rgba(123,44,191,0.15); border: 1px solid rgba(224, 170, 255, 0.3); border-radius: 10px; padding: 15px;">
+            <h6 style="color: #E0AAFF; margin-bottom: 12px; font-weight: 600;">Price Breakdown</h6>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: rgba(224,170,255,0.8);">Base Price:</span>
+              <span id="basePriceDisplay" style="color: #E0AAFF;">₹<span th:text="${service.price}">0</span></span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: rgba(224,170,255,0.8);">Add-ons:</span>
+              <span id="addonChargesDisplay" style="color: #E0AAFF;">₹0</span>
+            </div>
+
+            <div id="couponDiscountRow" style="display: none; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: rgba(224,170,255,0.8);">Coupon Discount:</span>
+              <span id="couponDiscountDisplay" style="color: #50FA7B;">-₹0</span>
+            </div>
+
+            <div style="border-top: 1px solid rgba(224, 170, 255, 0.2); margin: 10px 0; padding-top: 10px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: rgba(224,170,255,0.8);">Subtotal:</span>
+                <span id="subtotalDisplay" style="color: #E0AAFF;">₹<span th:text="${service.price}">0</span></span>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: rgba(224,170,255,0.8);">GST (18%):</span>
+                <span id="gstDisplay" style="color: #E0AAFF;">₹0</span>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; padding-top: 10px; border-top: 2px solid rgba(224, 170, 255, 0.3);">
+              <span style="color: #E0AAFF; font-weight: 600; font-size: 16px;">Total Amount:</span>
+              <span id="totalAmountDisplay" style="color: #50FA7B; font-weight: 600; font-size: 18px;">₹<span th:text="${service.price}">0</span></span>
+            </div>
+          </div>
+
           <div class="alert alert-info" style="background: rgba(0, 123, 255, 0.1); border: 1px solid rgba(0, 123, 255, 0.3); color: #E0AAFF;">
             <strong>Note:</strong> Booking is subject to provider confirmation. You'll receive a notification once confirmed.
           </div>
@@ -254,7 +292,19 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+  // Pricing configuration
+  const COUPON_CODES = {
+    'FIRST30': { discount: 30, type: 'fixed', minAmount: 100 },
+    'SAVE30': { discount: 30, type: 'percentage', minAmount: 0 }
+  };
+
+  const basePrice = parseFloat([[${service.price}]]);
+  let currentCouponCode = null;
+  let currentCouponDiscount = 0;
+
   function openBookingModal() {
     const modal = new bootstrap.Modal(document.getElementById('bookingModal'));
     modal.show();
@@ -274,6 +324,7 @@
     const input = document.getElementById('couponInput');
     if (input && code) {
       input.value = code;
+      applyCouponInput();
     }
   }
 
@@ -283,7 +334,78 @@
       alert('Please enter a coupon code');
       return;
     }
-    alert('Coupon code selected: ' + input.value.trim().toUpperCase());
+
+    const code = input.value.trim().toUpperCase();
+    const coupon = COUPON_CODES[code];
+
+    if (!coupon) {
+      alert('Invalid coupon code');
+      currentCouponCode = null;
+      currentCouponDiscount = 0;
+    } else {
+      // Check minimum amount requirement
+      const addonCharges = getSelectedAddonCharges();
+      const subtotal = parseFloat(basePrice) + addonCharges;
+
+      if (subtotal < coupon.minAmount) {
+        alert('Coupon is not applicable. Minimum amount required: ₹' + coupon.minAmount);
+        currentCouponCode = null;
+        currentCouponDiscount = 0;
+        input.value = '';
+      } else {
+        currentCouponCode = code;
+        if (coupon.type === 'fixed') {
+          currentCouponDiscount = coupon.discount;
+        } else if (coupon.type === 'percentage') {
+          currentCouponDiscount = subtotal * (coupon.discount / 100);
+        }
+        alert('Coupon applied: ' + code + ' - ₹' + currentCouponDiscount.toFixed(2) + ' discount');
+      }
+    }
+
+    updatePricingBreakdown();
+  }
+
+  function getSelectedAddonCharges() {
+    const addonSelect = document.querySelector('select[name="addonIds"]');
+    let total = 0;
+
+    if (addonSelect && addonSelect.selectedOptions) {
+      for (let option of addonSelect.selectedOptions) {
+        const text = option.text;
+        const priceMatch = text.match(/Rs\.(\d+)/);
+        if (priceMatch) {
+          total += parseFloat(priceMatch[1]);
+        }
+      }
+    }
+
+    return total;
+  }
+
+  function calculateGST(subtotal) {
+    return subtotal * 0.18;
+  }
+
+  function updatePricingBreakdown() {
+    const addonCharges = getSelectedAddonCharges();
+    const subtotal = parseFloat(basePrice) + addonCharges - currentCouponDiscount;
+    const gst = calculateGST(Math.max(0, subtotal));
+    const totalAmount = subtotal + gst;
+
+    // Update display elements
+    document.getElementById('addonChargesDisplay').textContent = '₹' + addonCharges.toFixed(2);
+    document.getElementById('subtotalDisplay').textContent = '₹' + Math.max(0, subtotal).toFixed(2);
+    document.getElementById('gstDisplay').textContent = '₹' + gst.toFixed(2);
+    document.getElementById('totalAmountDisplay').innerHTML = '₹<span>' + Math.max(0, totalAmount).toFixed(2) + '</span>';
+
+    // Show/hide coupon discount row
+    if (currentCouponDiscount > 0) {
+      document.getElementById('couponDiscountDisplay').textContent = '-₹' + currentCouponDiscount.toFixed(2);
+      document.getElementById('couponDiscountRow').style.display = 'flex';
+    } else {
+      document.getElementById('couponDiscountRow').style.display = 'none';
+    }
   }
 
   // Set minimum date to tomorrow
@@ -295,6 +417,15 @@
       const minDateTime = tomorrow.toISOString().slice(0, 16);
       dateInput.min = minDateTime;
     }
+
+    // Add event listeners for dynamic updates
+    const addonSelect = document.querySelector('select[name="addonIds"]');
+    if (addonSelect) {
+      addonSelect.addEventListener('change', updatePricingBreakdown);
+    }
+
+    // Initialize pricing display
+    updatePricingBreakdown();
   });
 </script>
 <script th:if="${bookingSuccessMessage}" th:inline="javascript">

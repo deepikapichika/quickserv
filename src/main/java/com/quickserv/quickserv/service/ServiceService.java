@@ -118,7 +118,8 @@ public class ServiceService {
 
         List<ServiceListing> templates = loadSelectedTemplates(category.getId(), serviceIds);
         if (templates.isEmpty()) {
-            createDefaultService(providerUser, category, fallbackPrice);
+            // No default service is created anymore
+            // Providers must explicitly add services from their dashboard
             return;
         }
 
