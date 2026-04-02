@@ -6,6 +6,7 @@ public class ServiceSearchResultDto {
 
     private final Long providerId;
     private final String providerName;
+    private final String providerBusinessName;
     private final Double providerRating;
     private final Long serviceId;
     private final String serviceName;
@@ -15,10 +16,13 @@ public class ServiceSearchResultDto {
     private final Long subcategoryId;
     private final String subcategoryName;
     private final String location;
+    private final BigDecimal providerLatitude;
+    private final BigDecimal providerLongitude;
     private final String bookUrl;
 
     public ServiceSearchResultDto(Long providerId,
                                   String providerName,
+                                  String providerBusinessName,
                                   Double providerRating,
                                   Long serviceId,
                                   String serviceName,
@@ -28,9 +32,12 @@ public class ServiceSearchResultDto {
                                   Long subcategoryId,
                                   String subcategoryName,
                                   String location,
+                                  BigDecimal providerLatitude,
+                                  BigDecimal providerLongitude,
                                   String bookUrl) {
         this.providerId = providerId;
         this.providerName = providerName;
+        this.providerBusinessName = providerBusinessName;
         this.providerRating = providerRating;
         this.serviceId = serviceId;
         this.serviceName = serviceName;
@@ -40,6 +47,8 @@ public class ServiceSearchResultDto {
         this.subcategoryId = subcategoryId;
         this.subcategoryName = subcategoryName;
         this.location = location;
+        this.providerLatitude = providerLatitude;
+        this.providerLongitude = providerLongitude;
         this.bookUrl = bookUrl;
     }
 
@@ -49,6 +58,10 @@ public class ServiceSearchResultDto {
 
     public String getProviderName() {
         return providerName;
+    }
+
+    public String getProviderBusinessName() {
+        return providerBusinessName;
     }
 
     public Double getProviderRating() {
@@ -85,6 +98,14 @@ public class ServiceSearchResultDto {
 
     public String getLocation() {
         return location;
+    }
+
+    public BigDecimal getProviderLatitude() {
+        return providerLatitude;
+    }
+
+    public BigDecimal getProviderLongitude() {
+        return providerLongitude;
     }
 
     public String getBookUrl() {

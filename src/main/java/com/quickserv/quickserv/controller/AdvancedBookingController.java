@@ -318,6 +318,12 @@ public class AdvancedBookingController {
         response.setGstAmount(booking.getGstAmount());
         response.setCreatedAt(booking.getCreatedAt());
         response.setUpdatedAt(booking.getUpdatedAt());
+        response.setCustomerAddress(booking.getCustomerAddress());
+        response.setCustomerLatitude(booking.getCustomerLatitude());
+        response.setCustomerLongitude(booking.getCustomerLongitude());
+        response.setProviderAddress(booking.getProviderAddress());
+        response.setProviderLatitude(booking.getProviderLatitude());
+        response.setProviderLongitude(booking.getProviderLongitude());
         return response;
     }
 

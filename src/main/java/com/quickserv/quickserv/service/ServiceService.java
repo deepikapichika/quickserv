@@ -2,8 +2,10 @@ package com.quickserv.quickserv.service;
 
 import com.quickserv.quickserv.dto.search.ServiceSearchResultDto;
 import com.quickserv.quickserv.entity.Category;
+import com.quickserv.quickserv.entity.Provider;
 import com.quickserv.quickserv.entity.ServiceListing;
 import com.quickserv.quickserv.entity.User;
+import com.quickserv.quickserv.repository.ProviderRepository;
 import com.quickserv.quickserv.repository.ServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,9 @@ public class ServiceService {
 
     @Autowired
     private ServiceRepository serviceRepository;
+
+    @Autowired
+    private ProviderRepository providerRepository;
 
     // Get all services
     public List<ServiceListing> getAllServices() {
@@ -77,7 +82,7 @@ public class ServiceService {
     }
 
     public List<ServiceSearchResultDto> searchDiscovery(String location, Long categoryId, BigDecimal maxPrice) {
-        return serviceRepository.searchDiscovery(cleanNullable(location), categoryId, null, null, maxPrice, null);
+        return searchDiscovery(location, categoryId, null, null, maxPrice, null, null, null);
     }
 
     public List<ServiceSearchResultDto> searchDiscovery(String location,
@@ -86,7 +91,18 @@ public class ServiceService {
                                                         BigDecimal minPrice,
                                                         BigDecimal maxPrice,
                                                         Double minRating) {
-        return serviceRepository.searchDiscovery(
+        return searchDiscovery(location, categoryId, subcategoryId, minPrice, maxPrice, minRating, null, null);
+    }
+
+    public List<ServiceSearchResultDto> searchDiscovery(String location,
+                                                        Long categoryId,
+                                                        Long subcategoryId,
+                                                        BigDecimal minPrice,
+                                                        BigDecimal maxPrice,
+                                                        Double minRating,
+                                                        BigDecimal customerLatitude,
+                                                        BigDecimal customerLongitude) {
+        List<ServiceSearchResultDto> results = serviceRepository.searchDiscovery(
                 cleanNullable(location),
                 categoryId,
                 subcategoryId,
@@ -94,6 +110,7 @@ public class ServiceService {
                 maxPrice,
                 minRating
         );
+        return filterNearbySearchResults(results, customerLatitude, customerLongitude);
     }
 
     public List<Map<String, Object>> getServicesForCategoryLookup(Long categoryId) {
@@ -219,7 +236,18 @@ public class ServiceService {
                                                Long subcategoryId,
                                                BigDecimal minPrice,
                                                BigDecimal maxPrice) {
-        return serviceRepository.browseWithFilters(
+        return browseServices(keyword, location, categoryId, subcategoryId, minPrice, maxPrice, null, null);
+    }
+
+    public List<ServiceListing> browseServices(String keyword,
+                                               String location,
+                                               Long categoryId,
+                                               Long subcategoryId,
+                                               BigDecimal minPrice,
+                                               BigDecimal maxPrice,
+                                               BigDecimal customerLatitude,
+                                               BigDecimal customerLongitude) {
+        List<ServiceListing> services = serviceRepository.browseWithFilters(
                 cleanNullable(keyword),
                 cleanNullable(location),
                 categoryId,
@@ -227,5 +255,94 @@ public class ServiceService {
                 minPrice,
                 maxPrice
         );
+        return filterNearbyServices(services, customerLatitude, customerLongitude);
+    }
+
+    private List<ServiceListing> filterNearbyServices(List<ServiceListing> services,
+                                                      BigDecimal customerLatitude,
+                                                      BigDecimal customerLongitude) {
+        if (!hasCoordinates(customerLatitude, customerLongitude) || services == null || services.isEmpty()) {
+            return services;
+        }
+
+        Map<Long, Provider> providerByUserId = providerRepository.findAll().stream()
+                .filter(provider -> provider.getUser() != null)
+                .collect(java.util.stream.Collectors.toMap(
+                        provider -> provider.getUser().getId(),
+                        provider -> provider,
+                        (left, right) -> left,
+                        LinkedHashMap::new
+                ));
+
+        List<ServiceListing> nearby = new ArrayList<>();
+        for (ServiceListing service : services) {
+            Provider provider = service != null && service.getProvider() != null
+                    ? providerByUserId.get(service.getProvider().getId())
+                    : null;
+            if (provider == null || !hasCoordinates(provider.getLatitude(), provider.getLongitude())) {
+                continue;
+            }
+            double distanceKm = calculateDistanceKm(
+                    customerLatitude.doubleValue(),
+                    customerLongitude.doubleValue(),
+                    provider.getLatitude().doubleValue(),
+                    provider.getLongitude().doubleValue()
+            );
+            if (distanceKm <= 10.0d) {
+                nearby.add(service);
+            }
+        }
+
+        return nearby.isEmpty() ? services : nearby;
+    }
+
+    private List<ServiceSearchResultDto> filterNearbySearchResults(List<ServiceSearchResultDto> results,
+                                                                   BigDecimal customerLatitude,
+                                                                   BigDecimal customerLongitude) {
+        if (!hasCoordinates(customerLatitude, customerLongitude) || results == null || results.isEmpty()) {
+            return results;
+        }
+
+        Map<Long, Provider> providerById = providerRepository.findAll().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        Provider::getProviderId,
+                        provider -> provider,
+                        (left, right) -> left,
+                        LinkedHashMap::new
+                ));
+
+        List<ServiceSearchResultDto> nearby = new ArrayList<>();
+        for (ServiceSearchResultDto result : results) {
+            Provider provider = providerById.get(result.getProviderId());
+            if (provider == null || !hasCoordinates(provider.getLatitude(), provider.getLongitude())) {
+                continue;
+            }
+            double distanceKm = calculateDistanceKm(
+                    customerLatitude.doubleValue(),
+                    customerLongitude.doubleValue(),
+                    provider.getLatitude().doubleValue(),
+                    provider.getLongitude().doubleValue()
+            );
+            if (distanceKm <= 10.0d) {
+                nearby.add(result);
+            }
+        }
+
+        return nearby.isEmpty() ? results : nearby;
+    }
+
+    private boolean hasCoordinates(BigDecimal latitude, BigDecimal longitude) {
+        return latitude != null && longitude != null;
+    }
+
+    private double calculateDistanceKm(double lat1, double lon1, double lat2, double lon2) {
+        final double earthRadiusKm = 6371.0d;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return earthRadiusKm * c;
     }
 }

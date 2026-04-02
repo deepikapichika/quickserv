@@ -7,6 +7,7 @@ import com.quickserv.quickserv.entity.User;
 import com.quickserv.quickserv.exception.BusinessValidationException;
 import com.quickserv.quickserv.exception.ResourceNotFoundException;
 import com.quickserv.quickserv.repository.BookingRepository;
+import com.quickserv.quickserv.repository.ProviderRepository;
 import com.quickserv.quickserv.dto.booking.BookingCreateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,9 @@ public class BookingService {
 
     @Autowired
     private ServiceService serviceService;
+
+    @Autowired
+    private ProviderRepository providerRepository;
 
     /**
      * Create a new booking with validation and conflict checking
@@ -71,6 +75,20 @@ public class BookingService {
         booking.setPaymentMethod(parsePaymentMethod(request.getPaymentMethod()));
         booking.setAddonIds(convertAddonsToString(request.getAddonIds()));
         booking.setCouponCode(normalizeCouponCode(request.getCouponCode()));
+
+        booking.setCustomerAddress(firstNonBlank(request.getCustomerAddress(), customer.getLocation()));
+        booking.setCustomerLatitude(request.getCustomerLatitude() != null ? request.getCustomerLatitude() : customer.getLatitude());
+        booking.setCustomerLongitude(request.getCustomerLongitude() != null ? request.getCustomerLongitude() : customer.getLongitude());
+
+        com.quickserv.quickserv.entity.Provider providerProfile = providerRepository.findByUser(service.getProvider());
+        booking.setProviderAddress(firstNonBlank(
+                providerProfile != null ? providerProfile.getProviderLocations() : null,
+                service.getServiceLocations(),
+                service.getLocation(),
+                service.getProvider() != null ? service.getProvider().getLocation() : null
+        ));
+        booking.setProviderLatitude(providerProfile != null ? providerProfile.getLatitude() : null);
+        booking.setProviderLongitude(providerProfile != null ? providerProfile.getLongitude() : null);
 
         // Calculate total amount
         BigDecimal totalAmount = calculateTotalAmount(service, request);
@@ -293,6 +311,18 @@ public class BookingService {
         return addonIds.stream()
                 .map(String::valueOf)
                 .collect(Collectors.joining(","));
+    }
+
+    private String firstNonBlank(String... values) {
+        if (values == null) {
+            return null;
+        }
+        for (String value : values) {
+            if (value != null && !value.trim().isEmpty()) {
+                return value.trim();
+            }
+        }
+        return null;
     }
 
     public Optional<Booking> getBookingById(Long id) {

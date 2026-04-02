@@ -2,9 +2,11 @@ package com.quickserv.quickserv.controller;
 
 import com.quickserv.quickserv.dto.search.ServiceSearchResultDto;
 import com.quickserv.quickserv.entity.Category;
+import com.quickserv.quickserv.entity.User;
 import com.quickserv.quickserv.service.CategoryService;
 import com.quickserv.quickserv.service.ServiceService;
 import com.quickserv.quickserv.service.SubcategoryService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -37,7 +39,10 @@ public class SearchController {
                                  @RequestParam(required = false) BigDecimal minPrice,
                                  @RequestParam(required = false) BigDecimal maxPrice,
                                  @RequestParam(required = false) Double minRating,
+                                 HttpSession session,
                                  Model model) {
+
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
 
         List<ServiceSearchResultDto> searchResults = serviceService.searchDiscovery(
                 location,
@@ -45,7 +50,9 @@ public class SearchController {
                 subcategoryId,
                 minPrice,
                 maxPrice,
-                minRating
+                minRating,
+                loggedInUser != null ? loggedInUser.getLatitude() : null,
+                loggedInUser != null ? loggedInUser.getLongitude() : null
         );
         List<Category> categories = categoryService.getAllCategories();
 
@@ -69,8 +76,19 @@ public class SearchController {
                                                           @RequestParam(name = "subcategory_id", required = false) Long subcategoryId,
                                                           @RequestParam(required = false) BigDecimal minPrice,
                                                           @RequestParam(required = false) BigDecimal maxPrice,
-                                                          @RequestParam(required = false) Double minRating) {
-        return serviceService.searchDiscovery(location, categoryId, subcategoryId, minPrice, maxPrice, minRating);
+                                                          @RequestParam(required = false) Double minRating,
+                                                          HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        return serviceService.searchDiscovery(
+                location,
+                categoryId,
+                subcategoryId,
+                minPrice,
+                maxPrice,
+                minRating,
+                loggedInUser != null ? loggedInUser.getLatitude() : null,
+                loggedInUser != null ? loggedInUser.getLongitude() : null
+        );
     }
 
     @GetMapping("/quick-search")
@@ -78,7 +96,18 @@ public class SearchController {
     public List<ServiceSearchResultDto> quickSearch(@RequestParam(required = false) String query,
                                                     @RequestParam(required = false) Long categoryId,
                                                     @RequestParam(name = "subcategory_id", required = false) Long subcategoryId,
-                                                    @RequestParam(required = false) BigDecimal maxPrice) {
-        return serviceService.searchDiscovery(query, categoryId, subcategoryId, null, maxPrice, null);
+                                                    @RequestParam(required = false) BigDecimal maxPrice,
+                                                    HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        return serviceService.searchDiscovery(
+                query,
+                categoryId,
+                subcategoryId,
+                null,
+                maxPrice,
+                null,
+                loggedInUser != null ? loggedInUser.getLatitude() : null,
+                loggedInUser != null ? loggedInUser.getLongitude() : null
+        );
     }
 }

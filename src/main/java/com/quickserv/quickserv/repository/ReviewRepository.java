@@ -25,6 +25,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @Query("SELECT COUNT(r) FROM Review r WHERE r.provider.id = :providerId")
     Long getReviewCountForProvider(@Param("providerId") Long providerId);
 
+    @Query("SELECT r.booking.id FROM Review r WHERE r.customer.id = :customerId")
+    List<Long> findReviewedBookingIdsByCustomerId(@Param("customerId") Long customerId);
+
     void deleteByBookingIdIn(List<Long> bookingIds);
 
     void deleteByCustomerOrProvider(User customer, User provider);

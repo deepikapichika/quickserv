@@ -538,6 +538,16 @@
               <strong th:text="${booking.customer.name}">Customer Name</strong>
             </div>
             <small th:text="${booking.customer.email}">email@example.com</small>
+            <br>
+            <small>
+              <i class="fas fa-phone" style="margin-right: 4px;"></i>
+              <span th:text="${booking.customer.phone != null and !#strings.isEmpty(booking.customer.phone) ? booking.customer.phone : 'Not provided'}">Phone</span>
+            </small>
+            <br>
+            <small>
+              <i class="fas fa-map-marker-alt" style="margin-right: 4px;"></i>
+              <span th:text="${customerAddressByBookingId[booking.id] != null and !#strings.isEmpty(customerAddressByBookingId[booking.id]) ? customerAddressByBookingId[booking.id] : 'Not provided'}">Address</span>
+            </small>
           </td>
           <td>
             <div th:text="${booking.service.title}">Service Title</div>
@@ -627,5 +637,4 @@
   });
 </script>
 </body>
-</html></content>
-<parameter name="filePath">C:\Users\MOHAN\OneDrive\Desktop\project-service\quickserv\src\main\resources\templates\provider-bookings.html
+</html>

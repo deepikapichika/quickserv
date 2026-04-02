@@ -65,6 +65,24 @@ public class Booking {
     @Column(name = "discount_amount")
     private BigDecimal discountAmount = BigDecimal.ZERO;
 
+    @Column(name = "customer_address", length = 500)
+    private String customerAddress;
+
+    @Column(name = "customer_latitude", precision = 10, scale = 7)
+    private BigDecimal customerLatitude;
+
+    @Column(name = "customer_longitude", precision = 10, scale = 7)
+    private BigDecimal customerLongitude;
+
+    @Column(name = "provider_address", length = 500)
+    private String providerAddress;
+
+    @Column(name = "provider_latitude", precision = 10, scale = 7)
+    private BigDecimal providerLatitude;
+
+    @Column(name = "provider_longitude", precision = 10, scale = 7)
+    private BigDecimal providerLongitude;
+
     // Booking lifecycle timestamps
     private LocalDateTime confirmedAt;  // When customer confirmed
     private LocalDateTime assignedAt;  // When provider was assigned
@@ -261,6 +279,24 @@ public class Booking {
 
     public String getCouponCode() { return couponCode; }
     public void setCouponCode(String couponCode) { this.couponCode = couponCode; }
+
+    public String getCustomerAddress() { return customerAddress; }
+    public void setCustomerAddress(String customerAddress) { this.customerAddress = customerAddress; }
+
+    public BigDecimal getCustomerLatitude() { return customerLatitude; }
+    public void setCustomerLatitude(BigDecimal customerLatitude) { this.customerLatitude = customerLatitude; }
+
+    public BigDecimal getCustomerLongitude() { return customerLongitude; }
+    public void setCustomerLongitude(BigDecimal customerLongitude) { this.customerLongitude = customerLongitude; }
+
+    public String getProviderAddress() { return providerAddress; }
+    public void setProviderAddress(String providerAddress) { this.providerAddress = providerAddress; }
+
+    public BigDecimal getProviderLatitude() { return providerLatitude; }
+    public void setProviderLatitude(BigDecimal providerLatitude) { this.providerLatitude = providerLatitude; }
+
+    public BigDecimal getProviderLongitude() { return providerLongitude; }
+    public void setProviderLongitude(BigDecimal providerLongitude) { this.providerLongitude = providerLongitude; }
 
     // Backward-compatible accessors used by existing controllers/DTO mapping
     public BigDecimal getDiscountAmount() { return discountAmount; }

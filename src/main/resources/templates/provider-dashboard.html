@@ -595,6 +595,9 @@ class="background-img" alt="Background">
         <p><i class="fas fa-user-tag"></i> <span th:text="${user.role}">PROVIDER</span> Account</p>
       </div>
     </div>
+    <a th:if="${providerProfile != null}" th:href="@{'/provider/profile/' + ${providerProfile.providerId}}" class="btn-secondary">
+      <i class="fas fa-user-edit"></i> Edit Profile
+    </a>
   </div>
 
   <!-- Stats Section -->

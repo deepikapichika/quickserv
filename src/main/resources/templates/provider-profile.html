@@ -6,6 +6,7 @@
   <title th:text="${provider.user.name} + ' - QuickServ'">Provider Profile</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>
     * {
       margin: 0;
@@ -423,9 +424,9 @@
     <div class="rating-section">
       <div class="rating-stars">
         <i class="fas fa-star" th:each="star : ${#numbers.sequence(1, 5)}"
-           th:classappend="${star <= provider.rating} ? '' : 'far'"></i>
+           th:classappend="${star <= (providerAverageRating != null ? providerAverageRating : provider.rating)} ? '' : 'far'"></i>
       </div>
-      <span class="rating-text" th:text="${provider.rating} + ' (' + ${provider.totalReviews} + ' reviews)'">4.5 (12 reviews)</span>
+      <span class="rating-text" th:text="${(providerAverageRating != null ? providerAverageRating : provider.rating)} + ' (' + ${(providerReviewCount != null ? providerReviewCount : provider.totalReviews)} + ' reviews)'">4.5 (12 reviews)</span>
     </div>
 
     <div class="profile-charge">
@@ -494,6 +495,18 @@
         </h3>
         <p class="experience-text" th:text="${provider.experience}">Experienced electrician with over 5 years in residential and commercial electrical work. Specialized in wiring, circuit repairs, and electrical safety inspections.</p>
       </div>
+
+      <div class="profile-section">
+        <h3 class="section-title">
+          <i class="fas fa-star"></i> Reviews
+        </h3>
+        <div class="info-item" style="margin-bottom: 15px;" th:if="${providerReviews != null and !#lists.isEmpty(providerReviews)}" th:each="review : ${providerReviews}">
+          <div class="info-label" th:text="${review.customer.name} + ' - ' + ${#temporals.format(review.createdAt, 'dd MMM yyyy')}">Customer - Date</div>
+          <div class="info-value" style="margin-bottom: 6px;">Rating: <span th:text="${review.rating}">5</span>/5</div>
+          <div class="experience-text" th:text="${review.comment != null and !#strings.isEmpty(review.comment) ? review.comment : 'No written review.'}">Review text</div>
+        </div>
+        <p class="experience-text" th:if="${providerReviews == null or #lists.isEmpty(providerReviews)}">No reviews yet.</p>
+      </div>
     </div>
 
     <!-- Sidebar -->
@@ -527,6 +540,52 @@
           <input type="hidden" name="providerId" th:value="${provider.providerId}">
 
           <div class="form-group">
+            <label class="form-label">Business Name</label>
+            <input type="text" name="businessName" th:value="${provider.businessName}" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Provider Name</label>
+            <input type="text" name="providerName" th:value="${provider.user.name}" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="text" name="phone" th:value="${provider.user.phone}" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Address</label>
+            <input id="providerAddressInput" type="text" name="address" th:value="${provider.user.location}" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Business Location (Map)</label>
+            <div id="providerLocationMap" style="width: 100%; height: 220px; border-radius: 8px; border: 1px solid rgba(224, 170, 255, 0.25);"></div>
+            <small id="providerMapStatus" style="color: rgba(224,170,255,0.8); display: block; margin-top: 8px;">Search address or click map to pin business location.</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Services Offered</label>
+            <textarea name="servicesOffered" rows="2" placeholder="Comma separated services..." class="form-control" th:text="${provider.servicesOffered}"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Profile Photo URL</label>
+            <input type="url" name="profilePhotoUrl" th:value="${provider.profilePhotoUrl != null ? provider.profilePhotoUrl : provider.user.profilePhotoUrl}" class="form-control" placeholder="https://example.com/photo.jpg">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Latitude</label>
+            <input id="providerLatitudeInput" type="number" name="latitude" step="0.0000001" th:value="${provider.latitude}" class="form-control" placeholder="e.g., 12.9715987">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Longitude</label>
+            <input id="providerLongitudeInput" type="number" name="longitude" step="0.0000001" th:value="${provider.longitude}" class="form-control" placeholder="e.g., 77.5945627">
+          </div>
+
+          <div class="form-group">
             <label class="form-label">Service Charge (₹)</label>
             <input type="number" name="serviceCharge" step="0.01" th:value="${provider.serviceCharge}" class="form-control" required>
           </div>
@@ -549,6 +608,115 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  let providerMap;
+  let providerMarker;
+
+  function setProviderMarker(lat, lng) {
+    const latInput = document.getElementById('providerLatitudeInput');
+    const lngInput = document.getElementById('providerLongitudeInput');
+    if (latInput) latInput.value = Number(lat).toFixed(7);
+    if (lngInput) lngInput.value = Number(lng).toFixed(7);
+    if (!providerMap) return;
+
+    const point = [Number(lat), Number(lng)];
+    if (!providerMarker) {
+      providerMarker = L.marker(point, { draggable: true }).addTo(providerMap);
+      providerMarker.on('dragend', function(event) {
+        const moved = event.target.getLatLng();
+        setProviderMarker(moved.lat, moved.lng);
+        reverseGeocodeProvider(moved.lat, moved.lng);
+      });
+    } else {
+      providerMarker.setLatLng(point);
+    }
+
+    providerMap.setView(point, Math.max(providerMap.getZoom(), 15));
+  }
+
+  function reverseGeocodeProvider(lat, lng) {
+    const addressInput = document.getElementById('providerAddressInput');
+    if (!addressInput) return;
+
+    fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lng), {
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(resp => resp.ok ? resp.json() : null)
+      .then(data => {
+        if (data && data.display_name) {
+          addressInput.value = data.display_name;
+        }
+      })
+      .catch(() => {});
+  }
+
+  function geocodeProviderAddress(address) {
+    if (!address || !address.trim()) return;
+
+    fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=' + encodeURIComponent(address.trim()), {
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(resp => resp.ok ? resp.json() : [])
+      .then(results => {
+        if (!Array.isArray(results) || !results.length) return;
+        const first = results[0];
+        const lat = parseFloat(first.lat);
+        const lng = parseFloat(first.lon);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+          setProviderMarker(lat, lng);
+        }
+      })
+      .catch(() => {});
+  }
+
+  function initProviderMapPicker() {
+    if (providerMap) {
+      setTimeout(() => providerMap.invalidateSize(), 200);
+      return;
+    }
+
+    const mapContainer = document.getElementById('providerLocationMap');
+    const addressInput = document.getElementById('providerAddressInput');
+    const latInput = document.getElementById('providerLatitudeInput');
+    const lngInput = document.getElementById('providerLongitudeInput');
+    const status = document.getElementById('providerMapStatus');
+    if (!mapContainer || !addressInput || !latInput || !lngInput) return;
+
+    if (status) {
+      status.textContent = 'Type address and press Enter, or click map to pin business location.';
+    }
+
+    const lat = parseFloat(latInput.value);
+    const lng = parseFloat(lngInput.value);
+    const hasPoint = Number.isFinite(lat) && Number.isFinite(lng);
+    const center = hasPoint ? [lat, lng] : [20.5937, 78.9629];
+
+    providerMap = L.map(mapContainer).setView(center, hasPoint ? 15 : 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(providerMap);
+
+    providerMap.on('click', function(event) {
+      setProviderMarker(event.latlng.lat, event.latlng.lng);
+      reverseGeocodeProvider(event.latlng.lat, event.latlng.lng);
+    });
+
+    addressInput.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        geocodeProviderAddress(addressInput.value);
+      }
+    });
+
+    if (hasPoint) {
+      setProviderMarker(lat, lng);
+    }
+
+    setTimeout(() => providerMap.invalidateSize(), 200);
+  }
+
+  document.addEventListener('DOMContentLoaded', initProviderMapPicker);
+</script>
 </body>
-</html></content>
-<parameter name="filePath">C:\Users\MOHAN\OneDrive\Desktop\project-service\quickserv\src\main\resources\templates\provider-profile.html
+</html>

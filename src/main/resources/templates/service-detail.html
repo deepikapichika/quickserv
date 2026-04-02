@@ -154,6 +154,43 @@
       </div>
       <form th:action="@{'/service/' + ${service.id} + '/book'}" method="post">
         <div class="modal-body">
+          <div class="mb-3" style="background: rgba(123,44,191,0.15); border: 1px solid rgba(224,170,255,0.2); border-radius: 10px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="color: rgba(224,170,255,0.8);">Business Name:</span>
+              <span style="color: #E0AAFF; font-weight: 600;" th:text="${providerBusinessName}">Business Name</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="color: rgba(224,170,255,0.8);">Provider Name:</span>
+              <span style="color: #E0AAFF;" th:text="${service.provider.name}">Provider Name</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="color: rgba(224,170,255,0.8);">Phone Number:</span>
+              <span style="color: #E0AAFF;" th:text="${providerPhone != null and !#strings.isEmpty(providerPhone) ? providerPhone : 'Not provided'}">Phone</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="color: rgba(224,170,255,0.8);">Address:</span>
+              <span style="color: #E0AAFF; text-align: right; max-width: 70%;" th:text="${providerAddress != null and !#strings.isEmpty(providerAddress) ? providerAddress : 'Not specified'}">Address</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="color: rgba(224,170,255,0.8);">Service Name:</span>
+              <span style="color: #E0AAFF;" th:text="${service.title}">Service Name</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: rgba(224,170,255,0.8);">Price:</span>
+              <span style="color: #E0AAFF; font-weight: 600;">₹<span th:text="${service.price}">0</span> <span th:text="${service.priceUnit}">per service</span></span>
+            </div>
+          </div>
+
+          <div class="mb-3" th:if="${providerMapUrl != null and !#strings.isEmpty(providerMapUrl)}">
+            <label class="form-label" style="color: #E0AAFF;">Map Location (OpenStreetMap)</label>
+            <iframe th:src="${providerMapUrl}"
+                    width="100%"
+                    height="180"
+                    style="border: 0; border-radius: 10px;"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+          </div>
+
           <div class="mb-3">
             <label class="form-label" style="color: #E0AAFF;">Select Date & Time</label>
             <input type="datetime-local" name="bookingDateTime" class="form-control"
@@ -164,9 +201,13 @@
             <label class="form-label" style="color: #E0AAFF;">Address</label>
             <input type="text" name="address" class="form-control"
                    placeholder="Enter service address"
+                   th:value="${user.location}"
                    style="background: rgba(16, 0, 43, 0.6); border: 1px solid rgba(224, 170, 255, 0.3); color: white;"
                    required>
+            <small style="color: rgba(224,170,255,0.8);" th:if="${user.location != null and !#strings.isEmpty(user.location)}">Using your saved profile address. You can edit it for this booking.</small>
           </div>
+          <input type="hidden" name="customerLatitude" th:value="${user.latitude}">
+          <input type="hidden" name="customerLongitude" th:value="${user.longitude}">
 
           <div class="mb-3">
             <label class="form-label" style="color: #E0AAFF;">Add-ons (Optional)</label>
@@ -177,7 +218,7 @@
                       th:text="${addon.name + ' - Rs.' + addon.price}">
               </option>
             </select>
-            <small style="color: rgba(224, 170, 255, 0.8);">Hold Ctrl/Cmd to select multiple add-ons</small>
+            <small style="color: rgba(224,170,255,0.8);">Hold Ctrl/Cmd to select multiple add-ons</small>
           </div>
 
           <div class="mb-3">

@@ -10,6 +10,7 @@ import com.quickserv.quickserv.service.CategoryService;
 import com.quickserv.quickserv.service.ProviderService;
 import com.quickserv.quickserv.service.ServiceService;
 import com.quickserv.quickserv.service.UserService;
+import com.quickserv.quickserv.service.ReviewService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -29,6 +30,7 @@ public class DashboardController {
     @Autowired private BookingService bookingService;
     @Autowired private UserService userService;
     @Autowired private ProviderService providerService;
+    @Autowired private ReviewService reviewService;
 
     @GetMapping("/dashboard")
     public String redirectDashboard(HttpSession session) {
@@ -74,6 +76,7 @@ public class DashboardController {
 
         BookingService.BookingStats bookingStats = bookingService.getBookingStats(user);
         model.addAttribute("bookingStats", bookingStats);
+        model.addAttribute("providerProfile", providerService.getProviderByUser(user));
         model.addAttribute("user", user);
         return "provider-dashboard";
     }
@@ -135,6 +138,7 @@ public class DashboardController {
 
         List<Booking> bookings = bookingService.getCustomerBookings(customer);
         model.addAttribute("bookings", bookings);
+        model.addAttribute("reviewedBookingIds", reviewService.getReviewedBookingIdsForCustomer(customer.getId()));
         model.addAttribute("user", customer);
         return "customer-bookings";
     }

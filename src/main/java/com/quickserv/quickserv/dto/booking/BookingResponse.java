@@ -38,6 +38,12 @@ public class BookingResponse {
     private String couponCode;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String customerAddress;
+    private BigDecimal customerLatitude;
+    private BigDecimal customerLongitude;
+    private String providerAddress;
+    private BigDecimal providerLatitude;
+    private BigDecimal providerLongitude;
 
     // Constructors
     public BookingResponse() {
@@ -138,7 +144,22 @@ public class BookingResponse {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getCustomerAddress() { return customerAddress; }
+    public void setCustomerAddress(String customerAddress) { this.customerAddress = customerAddress; }
+
+    public BigDecimal getCustomerLatitude() { return customerLatitude; }
+    public void setCustomerLatitude(BigDecimal customerLatitude) { this.customerLatitude = customerLatitude; }
+
+    public BigDecimal getCustomerLongitude() { return customerLongitude; }
+    public void setCustomerLongitude(BigDecimal customerLongitude) { this.customerLongitude = customerLongitude; }
+
+    public String getProviderAddress() { return providerAddress; }
+    public void setProviderAddress(String providerAddress) { this.providerAddress = providerAddress; }
+
+    public BigDecimal getProviderLatitude() { return providerLatitude; }
+    public void setProviderLatitude(BigDecimal providerLatitude) { this.providerLatitude = providerLatitude; }
+
+    public BigDecimal getProviderLongitude() { return providerLongitude; }
+    public void setProviderLongitude(BigDecimal providerLongitude) { this.providerLongitude = providerLongitude; }
 }
-
-
-

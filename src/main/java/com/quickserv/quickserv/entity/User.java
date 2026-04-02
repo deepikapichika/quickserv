@@ -16,6 +16,12 @@ public class User {
     private String phone;
     private String role;
     private String location;
+    @Column(name = "profile_photo_url")
+    private String profilePhotoUrl;
+    @Column(name = "latitude", precision = 10, scale = 7)
+    private java.math.BigDecimal latitude;
+    @Column(name = "longitude", precision = 10, scale = 7)
+    private java.math.BigDecimal longitude;
 
     // Constructors
     public User() {
@@ -89,5 +95,29 @@ public class User {
 
     public void setLocation(String location) {
         this.location = location;
-    }//will automatically creates a table by spring,id,name,email,password,role,Role will store,CUSTOMER,service,Admin
-}
+    }
+
+    public String getProfilePhotoUrl() {
+        return profilePhotoUrl;
+    }
+
+    public void setProfilePhotoUrl(String profilePhotoUrl) {
+        this.profilePhotoUrl = profilePhotoUrl;
+    }
+
+    public java.math.BigDecimal getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(java.math.BigDecimal latitude) {
+        this.latitude = latitude;
+    }
+
+    public java.math.BigDecimal getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(java.math.BigDecimal longitude) {
+        this.longitude = longitude;
+    }
+}//will automatically creates a table by spring,id,name,email,password,role,Role will store,CUSTOMER,service,Admin

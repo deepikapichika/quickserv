@@ -6,6 +6,7 @@
   <title>Search Results - QuickServ</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>
     * {
       margin: 0;
@@ -520,16 +521,21 @@
 
   <!-- Results Section -->
   <div class="results-section">
-    <div class="results-header">
-      <div class="results-count" th:if="${not #lists.isEmpty(searchResults)}">
-        Found <span th:text="${#lists.size(searchResults)}">0</span> matching service(s)
+      <div th:if="${searchResults != null and !#lists.isEmpty(searchResults)}" style="margin-bottom: 15px; color: rgba(224,170,255,0.8); font-size: 14px;">
+        <i class="fas fa-location-dot"></i>
+        <span>Showing providers near your saved location when available.</span>
       </div>
-    </div>
+      <div id="searchResultsMap" style="display: none; width: 100%; height: 280px; border-radius: 12px; border: 1px solid rgba(224,170,255,0.2); margin-bottom: 20px;"></div>
+       <div class="results-header">
+         <div class="results-count" th:text="${#lists.size(searchResults)} + ' providers found'">0 providers found</div>
+       </div>
 
     <div class="providers-grid" th:if="${not #lists.isEmpty(searchResults)}">
-      <div class="provider-card" th:each="result : ${searchResults}">
+      <div class="provider-card" th:each="result : ${searchResults}"
+           th:attr="data-provider-name=${result.providerName},data-provider-business=${result.providerBusinessName},data-provider-lat=${result.providerLatitude},data-provider-lng=${result.providerLongitude},data-provider-location=${result.location}">
         <div class="provider-header">
-          <h3 class="provider-name" th:text="${result.providerName}">Provider Name</h3>
+          <h3 class="provider-name" th:text="${result.providerBusinessName != null ? result.providerBusinessName : result.providerName}">Provider Name</h3>
+          <div class="provider-category" th:text="${'By ' + result.providerName}">By Provider</div>
           <div class="provider-category" th:text="${result.categoryName}">Category</div>
           <div class="rating-stars">
             <div class="stars">
@@ -578,5 +584,46 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  function initSearchResultsMap() {
+    const cards = Array.from(document.querySelectorAll('.provider-card'));
+    if (!cards.length) return;
+
+    const points = cards
+      .map(card => ({
+        name: card.getAttribute('data-provider-business') || card.getAttribute('data-provider-name') || 'Provider',
+        providerName: card.getAttribute('data-provider-name') || '',
+        location: card.getAttribute('data-provider-location') || '',
+        lat: parseFloat(card.getAttribute('data-provider-lat')),
+        lng: parseFloat(card.getAttribute('data-provider-lng'))
+      }))
+      .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+
+    if (!points.length) return;
+
+    const mapContainer = document.getElementById('searchResultsMap');
+    if (!mapContainer) return;
+    mapContainer.style.display = 'block';
+
+    const map = L.map(mapContainer).setView([points[0].lat, points[0].lng], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const bounds = L.latLngBounds([]);
+    points.forEach(point => {
+      const marker = L.marker([point.lat, point.lng]).addTo(map);
+      marker.bindPopup('<strong>' + point.name + '</strong><br>' + point.providerName + '<br>' + point.location);
+      bounds.extend([point.lat, point.lng]);
+    });
+
+    if (points.length > 1) {
+      map.fitBounds(bounds, { padding: [20, 20] });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', initSearchResultsMap);
+</script>
 </body>
 </html>

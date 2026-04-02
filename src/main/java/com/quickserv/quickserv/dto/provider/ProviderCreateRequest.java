@@ -15,6 +15,9 @@ public class ProviderCreateRequest {
     @NotNull(message = "category_id is required")
     private Long categoryId;
 
+    @Size(max = 255, message = "business_name must be at most 255 characters")
+    private String businessName;
+
     @Size(max = 2000, message = "experience must be at most 2000 characters")
     private String experience;
 
@@ -40,6 +43,14 @@ public class ProviderCreateRequest {
 
     public void setCategoryId(Long categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public String getBusinessName() {
+        return businessName;
+    }
+
+    public void setBusinessName(String businessName) {
+        this.businessName = businessName;
     }
 
     public String getExperience() {

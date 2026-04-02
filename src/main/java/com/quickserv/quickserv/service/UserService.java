@@ -97,6 +97,35 @@ public class UserService {
     }
 
     @Transactional
+    public User updateCustomerProfile(Long userId,
+                                      String name,
+                                      String phone,
+                                      String address,
+                                      String profilePhotoUrl,
+                                      java.math.BigDecimal latitude,
+                                      java.math.BigDecimal longitude) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found."));
+
+        if (name != null && !name.trim().isEmpty()) {
+            user.setName(name.trim());
+        }
+        if (phone != null && !phone.trim().isEmpty()) {
+            user.setPhone(normalizePhone(phone));
+        }
+        if (address != null && !address.trim().isEmpty()) {
+            user.setLocation(address.trim());
+        }
+        if (profilePhotoUrl != null) {
+            user.setProfilePhotoUrl(profilePhotoUrl.trim().isEmpty() ? null : profilePhotoUrl.trim());
+        }
+        user.setLatitude(latitude);
+        user.setLongitude(longitude);
+
+        return userRepository.save(user);
+    }
+
+    @Transactional
     public void deleteUserById(Long id) {
         User targetUser = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found."));

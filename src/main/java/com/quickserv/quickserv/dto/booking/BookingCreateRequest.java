@@ -32,6 +32,13 @@ public class BookingCreateRequest {
 
     private BigDecimal serviceCharge = BigDecimal.ZERO;
 
+    @Size(max = 500, message = "Customer address cannot exceed 500 characters")
+    private String customerAddress;
+
+    private BigDecimal customerLatitude;
+
+    private BigDecimal customerLongitude;
+
     // Constructors
     public BookingCreateRequest() {
     }
@@ -98,5 +105,28 @@ public class BookingCreateRequest {
     public void setServiceCharge(BigDecimal serviceCharge) {
         this.serviceCharge = serviceCharge;
     }
-}
 
+    public String getCustomerAddress() {
+        return customerAddress;
+    }
+
+    public void setCustomerAddress(String customerAddress) {
+        this.customerAddress = customerAddress;
+    }
+
+    public BigDecimal getCustomerLatitude() {
+        return customerLatitude;
+    }
+
+    public void setCustomerLatitude(BigDecimal customerLatitude) {
+        this.customerLatitude = customerLatitude;
+    }
+
+    public BigDecimal getCustomerLongitude() {
+        return customerLongitude;
+    }
+
+    public void setCustomerLongitude(BigDecimal customerLongitude) {
+        this.customerLongitude = customerLongitude;
+    }
+}

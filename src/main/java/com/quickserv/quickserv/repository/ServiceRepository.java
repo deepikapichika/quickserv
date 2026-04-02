@@ -59,6 +59,7 @@ public interface ServiceRepository extends JpaRepository<ServiceListing, Long> {
             SELECT new com.quickserv.quickserv.dto.search.ServiceSearchResultDto(
                 p.providerId,
                 u.name,
+                COALESCE(p.businessName, u.name),
                 COALESCE(p.rating, 0.0),
                 s.id,
                 COALESCE(sc.name, s.title),
@@ -68,6 +69,8 @@ public interface ServiceRepository extends JpaRepository<ServiceListing, Long> {
                 sc.id,
                 sc.name,
                 u.location,
+                p.latitude,
+                p.longitude,
                 CONCAT('/service/', s.id)
             )
             FROM ServiceListing s

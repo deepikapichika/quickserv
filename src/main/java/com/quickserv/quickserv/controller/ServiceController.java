@@ -21,10 +21,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Controller
@@ -214,7 +218,9 @@ public class ServiceController {
                 categoryId,
                 subcategoryId,
                 minPrice,
-                maxPrice
+                maxPrice,
+                user.getLatitude(),
+                user.getLongitude()
         );
 
         model.addAttribute("services", services);
@@ -260,6 +266,36 @@ public class ServiceController {
         model.addAttribute("user", user);
         model.addAttribute("availableAddons", getAddonsForService(service));
         model.addAttribute("availableCoupons", getCouponsForService(service));
+
+        Provider providerProfile = providerService.getProviderByUser(service.getProvider());
+        String businessName = (providerProfile != null && providerProfile.getBusinessName() != null
+                && !providerProfile.getBusinessName().trim().isEmpty())
+                ? providerProfile.getBusinessName().trim()
+                : service.getProvider().getName();
+
+        String providerAddress = firstNonBlank(
+                providerProfile != null ? providerProfile.getProviderLocations() : null,
+                service.getServiceLocations(),
+                service.getLocation(),
+                service.getProvider().getLocation()
+        );
+
+        String providerMapUrl = null;
+        if (providerProfile != null && providerProfile.getLatitude() != null && providerProfile.getLongitude() != null) {
+            double lat = providerProfile.getLatitude().doubleValue();
+            double lng = providerProfile.getLongitude().doubleValue();
+            double delta = 0.01d;
+            String bbox = String.format(java.util.Locale.US, "%.6f,%.6f,%.6f,%.6f", lng - delta, lat - delta, lng + delta, lat + delta);
+            String marker = String.format(java.util.Locale.US, "%.6f,%.6f", lat, lng);
+            providerMapUrl = "https://www.openstreetmap.org/export/embed.html?bbox=" + bbox + "&layer=mapnik&marker=" + marker;
+        }
+
+        model.addAttribute("providerBusinessName", businessName);
+        model.addAttribute("providerPhone", service.getProvider().getPhone());
+        model.addAttribute("providerAddress", providerAddress);
+        model.addAttribute("providerMapUrl", providerMapUrl);
+        model.addAttribute("providerLatitude", providerProfile != null ? providerProfile.getLatitude() : null);
+        model.addAttribute("providerLongitude", providerProfile != null ? providerProfile.getLongitude() : null);
         return "service-detail";
     }
 
@@ -294,6 +330,9 @@ public class ServiceController {
             request.setPaymentMethod(paymentMethod);
             request.setCouponCode(couponCode);
             request.setAddonIds(addonIds);
+            request.setCustomerAddress(address);
+            request.setCustomerLatitude(customer.getLatitude());
+            request.setCustomerLongitude(customer.getLongitude());
 
             // Preserve existing notes field and append optional address for provider visibility.
             StringBuilder combinedNotes = new StringBuilder();
@@ -330,6 +369,7 @@ public class ServiceController {
 
         model.addAttribute("bookings", bookings);
         model.addAttribute("stats", stats);
+        model.addAttribute("customerAddressByBookingId", buildCustomerAddressMap(bookings));
         return "provider-bookings";
     }
 
@@ -411,6 +451,53 @@ public class ServiceController {
             return null;
         }
         return normalizedLocations.split(",")[0].trim();
+    }
+
+    private String firstNonBlank(String... values) {
+        if (values == null) {
+            return null;
+        }
+        for (String value : values) {
+            if (value != null && !value.trim().isEmpty()) {
+                return value.trim();
+            }
+        }
+        return null;
+    }
+
+    private Map<Long, String> buildCustomerAddressMap(List<Booking> bookings) {
+        Map<Long, String> addressByBookingId = new LinkedHashMap<>();
+        if (bookings == null) {
+            return addressByBookingId;
+        }
+
+        for (Booking booking : bookings) {
+            String parsedAddress = extractAddressFromNotes(booking.getCustomerNotes());
+            String fallbackLocation = booking.getCustomer() != null ? booking.getCustomer().getLocation() : null;
+            addressByBookingId.put(booking.getId(), firstNonBlank(parsedAddress, fallbackLocation));
+        }
+        return addressByBookingId;
+    }
+
+    private String extractAddressFromNotes(String customerNotes) {
+        if (customerNotes == null || customerNotes.isEmpty()) {
+            return null;
+        }
+
+        String[] lines = customerNotes.split("\\r?\\n");
+        for (String line : lines) {
+            if (line == null) {
+                continue;
+            }
+            String trimmed = line.trim();
+            if (trimmed.regionMatches(true, 0, "Address:", 0, "Address:".length())) {
+                String value = trimmed.substring("Address:".length()).trim();
+                if (!value.isEmpty()) {
+                    return value;
+                }
+            }
+        }
+        return null;
     }
 
     private List<BookingAddonOption> getAddonsForService(ServiceListing service) {

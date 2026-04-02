@@ -6,6 +6,7 @@ import com.quickserv.quickserv.entity.User;
 import com.quickserv.quickserv.exception.BusinessValidationException;
 import com.quickserv.quickserv.exception.ResourceNotFoundException;
 import com.quickserv.quickserv.repository.BookingRepository;
+import com.quickserv.quickserv.repository.ProviderRepository;
 import com.quickserv.quickserv.repository.ReviewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ public class ReviewService {
 
     @Autowired
     private BookingRepository bookingRepository;
+
+    @Autowired
+    private ProviderRepository providerRepository;
 
     /**
      * Create a review for a completed booking
@@ -54,7 +58,22 @@ public class ReviewService {
 
         // Create review
         Review review = new Review(booking, customer, booking.getProvider(), rating, comment);
-        return reviewRepository.save(review);
+        Review savedReview = reviewRepository.save(review);
+
+        // Update provider aggregate rating/count for consistency across profile/search views
+        if (booking.getProvider() != null) {
+            com.quickserv.quickserv.entity.Provider provider = providerRepository.findByUser(booking.getProvider());
+            if (provider != null) {
+                int currentTotalReviews = provider.getTotalReviews() != null ? provider.getTotalReviews() : 0;
+                double currentRating = provider.getRating() != null ? provider.getRating() : 0.0;
+                double newAverage = ((currentRating * currentTotalReviews) + rating) / (currentTotalReviews + 1);
+                provider.setRating(Math.round(newAverage * 10.0) / 10.0);
+                provider.setTotalReviews(currentTotalReviews + 1);
+                providerRepository.save(provider);
+            }
+        }
+
+        return savedReview;
     }
 
     /**
@@ -86,6 +105,13 @@ public class ReviewService {
         return reviewRepository.findByBookingId(bookingId);
     }
 
+    public List<Long> getReviewedBookingIdsForCustomer(Long customerId) {
+        if (customerId == null) {
+            return List.of();
+        }
+        return reviewRepository.findReviewedBookingIdsByCustomerId(customerId);
+    }
+
     /**
      * Delete a review
      */
@@ -101,4 +127,3 @@ public class ReviewService {
         reviewRepository.delete(review);
     }
 }
-

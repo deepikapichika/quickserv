@@ -52,6 +52,7 @@ public class ProviderService {
         Provider provider = new Provider();
         provider.setUser(user);
         provider.setCategory(category);
+        provider.setBusinessName(cleanNullable(request.getBusinessName()));
         provider.setExperience(cleanNullable(request.getExperience()));
         provider.setServiceCharge(request.getServiceCharge() == null ? BigDecimal.ZERO : request.getServiceCharge());
         provider.setAvailability(defaultIfBlank(request.getAvailability(), "Flexible"));
@@ -144,15 +145,52 @@ public class ProviderService {
     }
 
     public Provider updateProviderProfile(Long providerId, String experience, String availability, BigDecimal serviceCharge) {
+        return updateProviderProfile(providerId, null, null, null, null, null, null, null, null, experience, availability, serviceCharge);
+    }
+
+    public Provider updateProviderProfile(Long providerId,
+                                          String businessName,
+                                          String providerName,
+                                          String phone,
+                                          String address,
+                                          String servicesOffered,
+                                          String profilePhotoUrl,
+                                          BigDecimal latitude,
+                                          BigDecimal longitude,
+                                          String experience,
+                                          String availability,
+                                          BigDecimal serviceCharge) {
         Provider provider = providerRepository.findById(providerId).orElse(null);
         if (provider == null) {
             throw new RuntimeException("Provider not found");
         }
 
+        User user = provider.getUser();
+        if (user == null) {
+            throw new RuntimeException("Provider user not found");
+        }
+
+        if (businessName != null) provider.setBusinessName(cleanNullable(businessName));
+        if (providerName != null && !providerName.trim().isEmpty()) user.setName(providerName.trim());
+        if (phone != null && !phone.trim().isEmpty()) user.setPhone(phone.trim());
+        if (address != null && !address.trim().isEmpty()) {
+            user.setLocation(address.trim());
+            provider.setProviderLocations(address.trim());
+        }
+        if (servicesOffered != null) provider.setServicesOffered(cleanNullable(servicesOffered));
+        if (profilePhotoUrl != null) {
+            String cleanPhoto = cleanNullable(profilePhotoUrl);
+            user.setProfilePhotoUrl(cleanPhoto);
+            provider.setProfilePhotoUrl(cleanPhoto);
+        }
+        if (latitude != null) provider.setLatitude(latitude);
+        if (longitude != null) provider.setLongitude(longitude);
+
         if (experience != null) provider.setExperience(experience);
         if (availability != null) provider.setAvailability(availability);
         if (serviceCharge != null) provider.setServiceCharge(serviceCharge);
 
+        userRepository.save(user);
         return providerRepository.save(provider);
     }
 
@@ -180,6 +218,7 @@ public class ProviderService {
         response.setUserName(provider.getUser() != null ? provider.getUser().getName() : null);
         response.setUserEmail(provider.getUser() != null ? provider.getUser().getEmail() : null);
         response.setUserLocation(provider.getUser() != null ? provider.getUser().getLocation() : null);
+        response.setBusinessName(provider.getBusinessName());
         response.setCategoryId(provider.getCategory() != null ? provider.getCategory().getId() : null);
         response.setCategoryName(provider.getCategory() != null ? provider.getCategory().getName() : null);
         response.setExperience(provider.getExperience());

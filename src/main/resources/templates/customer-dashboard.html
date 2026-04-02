@@ -6,6 +6,7 @@
     <title>Customer Dashboard - QuickServ</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <style>
         * {
             margin: 0;
@@ -506,13 +507,70 @@
             <div class="user-details">
                 <div class="user-name" th:text="${user.name}">User Name</div>
                 <div class="user-role" th:text="${user.role}">Role</div>
+                <div class="user-role" th:if="${user.latitude != null and user.longitude != null}">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span th:text="${#numbers.formatDecimal(user.latitude,1,6) + ', ' + #numbers.formatDecimal(user.longitude,1,6)}">Saved location</span>
+                </div>
             </div>
         </div>
+        <button type="button" class="logout-btn" data-bs-toggle="modal" data-bs-target="#customerEditProfileModal">
+            <i class="fas fa-user-edit"></i> Edit Profile
+        </button>
         <a href="/logout" class="logout-btn">
             <i class="fas fa-sign-out-alt"></i> Logout
         </a>
     </div>
 </nav>
+
+<div class="modal fade" id="customerEditProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background: rgba(22, 0, 50, 0.95); border: 1px solid rgba(224, 170, 255, 0.3);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(224, 170, 255, 0.2);">
+                <h5 class="modal-title" style="color: #E0AAFF;">Edit Profile</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/customer/profile/update" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label" style="color: #E0AAFF;">Name</label>
+                        <input type="text" name="name" th:value="${user.name}" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" style="color: #E0AAFF;">Phone Number</label>
+                        <input type="text" name="phone" th:value="${user.phone}" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" style="color: #E0AAFF;">Address</label>
+                        <input id="customerAddressInput" type="text" name="address" th:value="${user.location}" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" style="color: #E0AAFF;">Map Location</label>
+                        <div id="customerLocationMap" style="width: 100%; height: 220px; border-radius: 8px; border: 1px solid rgba(224, 170, 255, 0.25);"></div>
+                        <small id="mapStatusText" style="color: rgba(224, 170, 255, 0.8); display: block; margin-top: 8px;">Search address or click map to pin location.</small>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label" style="color: #E0AAFF;">Latitude</label>
+                            <input id="customerLatitude" type="number" name="latitude" step="0.0000001" th:value="${user.latitude}" class="form-control" readonly>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label" style="color: #E0AAFF;">Longitude</label>
+                            <input id="customerLongitude" type="number" name="longitude" step="0.0000001" th:value="${user.longitude}" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" style="color: #E0AAFF;">Profile Photo URL</label>
+                        <input type="url" name="profilePhotoUrl" th:value="${user.profilePhotoUrl}" class="form-control" placeholder="https://example.com/photo.jpg">
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid rgba(224, 170, 255, 0.2);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn" style="background: linear-gradient(135deg, #5A189A, #7B2CBF); color: white; border: none;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <!-- Main Content -->
 <div class="main-content">
@@ -587,5 +645,122 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    let customerMap;
+    let customerMarker;
+    let customerMapReady = false;
+
+    function setCustomerMarkerAndInputs(lat, lng) {
+        const latInput = document.getElementById('customerLatitude');
+        const lngInput = document.getElementById('customerLongitude');
+        if (latInput) latInput.value = Number(lat).toFixed(7);
+        if (lngInput) lngInput.value = Number(lng).toFixed(7);
+
+        if (!customerMap) return;
+
+        const latLng = [Number(lat), Number(lng)];
+        if (!customerMarker) {
+            customerMarker = L.marker(latLng, { draggable: true }).addTo(customerMap);
+            customerMarker.on('dragend', function(event) {
+                const point = event.target.getLatLng();
+                setCustomerMarkerAndInputs(point.lat, point.lng);
+                reverseGeocodeCustomerAddress(point.lat, point.lng);
+            });
+        } else {
+            customerMarker.setLatLng(latLng);
+        }
+        customerMap.setView(latLng, Math.max(customerMap.getZoom(), 15));
+    }
+
+    function reverseGeocodeCustomerAddress(lat, lng) {
+        const addressInput = document.getElementById('customerAddressInput');
+        if (!addressInput) return;
+
+        fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lng), {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(resp => resp.ok ? resp.json() : null)
+        .then(data => {
+            if (data && data.display_name) {
+                addressInput.value = data.display_name;
+            }
+        })
+        .catch(() => {});
+    }
+
+    function geocodeCustomerAddress(address) {
+        if (!address || !address.trim()) return;
+
+        fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=' + encodeURIComponent(address.trim()), {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(resp => resp.ok ? resp.json() : [])
+        .then(results => {
+            if (!Array.isArray(results) || !results.length) return;
+            const first = results[0];
+            const lat = parseFloat(first.lat);
+            const lng = parseFloat(first.lon);
+            if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                setCustomerMarkerAndInputs(lat, lng);
+            }
+        })
+        .catch(() => {});
+    }
+
+    function initializeCustomerMap() {
+        if (customerMapReady) {
+            setTimeout(() => customerMap.invalidateSize(), 200);
+            return;
+        }
+
+        const mapContainer = document.getElementById('customerLocationMap');
+        const addressInput = document.getElementById('customerAddressInput');
+        if (!mapContainer || !addressInput) {
+            return;
+        }
+
+        const statusText = document.getElementById('mapStatusText');
+        if (statusText) {
+            statusText.textContent = 'Type address and press Enter, or click map to pin location.';
+        }
+
+        const latValue = parseFloat(document.getElementById('customerLatitude')?.value);
+        const lngValue = parseFloat(document.getElementById('customerLongitude')?.value);
+        const hasSavedPoint = Number.isFinite(latValue) && Number.isFinite(lngValue);
+        const initial = hasSavedPoint ? [latValue, lngValue] : [20.5937, 78.9629];
+
+        customerMap = L.map(mapContainer).setView(initial, hasSavedPoint ? 15 : 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(customerMap);
+
+        customerMap.on('click', function(event) {
+            setCustomerMarkerAndInputs(event.latlng.lat, event.latlng.lng);
+            reverseGeocodeCustomerAddress(event.latlng.lat, event.latlng.lng);
+        });
+
+        addressInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                geocodeCustomerAddress(addressInput.value);
+            }
+        });
+
+        if (hasSavedPoint) {
+            setCustomerMarkerAndInputs(latValue, lngValue);
+        }
+
+        customerMapReady = true;
+        setTimeout(() => customerMap.invalidateSize(), 200);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const editModal = document.getElementById('customerEditProfileModal');
+        if (!editModal) return;
+
+        editModal.addEventListener('shown.bs.modal', initializeCustomerMap);
+    });
+</script>
 </body>
 </html>

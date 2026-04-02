@@ -23,6 +23,9 @@ CREATE TABLE users (
     phone VARCHAR(20),
     role ENUM('CUSTOMER', 'PROVIDER', 'ADMIN') DEFAULT 'CUSTOMER',
     location VARCHAR(255),
+    profile_photo_url VARCHAR(1000),
+    latitude DECIMAL(10,7),
+    longitude DECIMAL(10,7),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -78,6 +81,10 @@ CREATE TABLE providers (
     rating DOUBLE DEFAULT 0.0,
     total_reviews INT DEFAULT 0,
     provider_locations VARCHAR(1000),
+    services_offered VARCHAR(1500),
+    profile_photo_url VARCHAR(1000),
+    latitude DECIMAL(10,7),
+    longitude DECIMAL(10,7),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (category_id) REFERENCES categories(id)
 );
@@ -98,7 +105,13 @@ CREATE TABLE bookings (
     service_id BIGINT NOT NULL,
     booking_date_time DATETIME NOT NULL,
     customer_notes TEXT,
+    customer_address VARCHAR(500),
+    customer_latitude DECIMAL(10,7),
+    customer_longitude DECIMAL(10,7),
     provider_notes TEXT,
+    provider_address VARCHAR(500),
+    provider_latitude DECIMAL(10,7),
+    provider_longitude DECIMAL(10,7),
     status ENUM('PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'REJECTED') DEFAULT 'PENDING',
     total_amount DECIMAL(10,2),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -106,6 +119,20 @@ CREATE TABLE bookings (
     FOREIGN KEY (customer_id) REFERENCES users(id),
     FOREIGN KEY (provider_id) REFERENCES users(id),
     FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
+);
+
+CREATE TABLE reviews (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    booking_id BIGINT NOT NULL UNIQUE,
+    customer_id BIGINT NOT NULL,
+    provider_id BIGINT NOT NULL,
+    rating INT NOT NULL,
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (provider_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Insert sample categories

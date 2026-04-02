@@ -9,6 +9,7 @@ public class ProviderResponse {
     private String userName;
     private String userEmail;
     private String userLocation;
+    private String businessName;
     private Long categoryId;
     private String categoryName;
     private String experience;
@@ -54,6 +55,14 @@ public class ProviderResponse {
 
     public void setUserLocation(String userLocation) {
         this.userLocation = userLocation;
+    }
+
+    public String getBusinessName() {
+        return businessName;
+    }
+
+    public void setBusinessName(String businessName) {
+        this.businessName = businessName;
     }
 
     public Long getCategoryId() {
@@ -104,4 +113,3 @@ public class ProviderResponse {
         this.rating = rating;
     }
 }
-

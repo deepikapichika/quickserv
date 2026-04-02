@@ -123,6 +123,56 @@ public class UserController {
         return "redirect:/login?logout=true";  // Redirect to login with message
     }
 
+    @PostMapping(value = "/customer/profile/update", produces = {MediaType.TEXT_HTML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    public Object updateCustomerProfile(@RequestParam String name,
+                                        @RequestParam String phone,
+                                        @RequestParam String address,
+                                        @RequestParam(required = false) String profilePhotoUrl,
+                                        @RequestParam(required = false) java.math.BigDecimal latitude,
+                                        @RequestParam(required = false) java.math.BigDecimal longitude,
+                                        @RequestHeader(value = "X-Requested-With", required = false) String requestedWith,
+                                        HttpSession session,
+                                        Model model) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        if (loggedInUser == null || !"CUSTOMER".equals(loggedInUser.getRole())) {
+            if (isAjaxRequest(requestedWith)) {
+                return ResponseEntity.status(401).body(Map.of("success", false, "message", "Please log in as customer."));
+            }
+            return "redirect:/login";
+        }
+
+        try {
+            User updated = userService.updateCustomerProfile(loggedInUser.getId(), name, phone, address, profilePhotoUrl, latitude, longitude);
+            session.setAttribute("loggedInUser", updated);
+
+            if (isAjaxRequest(requestedWith)) {
+                return ResponseEntity.ok(Map.of("success", true, "message", "Profile updated successfully."));
+            }
+            return "redirect:/customer/dashboard";
+        } catch (RuntimeException ex) {
+            if (isAjaxRequest(requestedWith)) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", ex.getMessage()));
+            }
+            return "redirect:/customer/dashboard";
+        }
+    }
+
+    @GetMapping(value = "/customer/profile/location", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getCustomerLocation(HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        if (loggedInUser == null || !"CUSTOMER".equalsIgnoreCase(loggedInUser.getRole())) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "Please log in as customer."));
+        }
+
+        Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("success", true);
+        payload.put("address", loggedInUser.getLocation());
+        payload.put("latitude", loggedInUser.getLatitude());
+        payload.put("longitude", loggedInUser.getLongitude());
+        return ResponseEntity.ok(payload);
+    }
+
     private String redirectByRole(User user) {
         if ("ADMIN".equals(user.getRole())) {
             return "redirect:/admin/dashboard";
