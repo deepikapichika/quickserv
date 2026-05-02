@@ -1,11 +1,16 @@
-FROM eclipse-temurin:17-jdk
+# Multi-stage Dockerfile for building and running the QuickServ Spring Boot app
+# Stage 1 - build with Maven wrapper
+FROM eclipse-temurin:17-jdk AS build
 WORKDIR /app
+# copy mvnw and maven wrapper dir first for faster rebuilds
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+COPY src ./src
+RUN ./mvnw -DskipTests clean package -DskipITs || mvn -DskipTests clean package
 
-COPY . .
-RUN chmod +x mvnw
-RUN ./mvnw clean package -DskipTests
-
+# Stage 2 - runtime image
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-CMD ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar target/quickserv-0.0.1-SNAPSHOT.jar"]
-
-# render redeploy
+ENTRYPOINT ["java","-jar","/app/app.jar"]
