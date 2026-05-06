@@ -4,6 +4,7 @@ import com.quickserv.quickserv.dto.provider.ProviderResponse;
 import com.quickserv.quickserv.entity.User;
 import com.quickserv.quickserv.service.CategoryService;
 import com.quickserv.quickserv.service.ProviderService;
+import com.quickserv.quickserv.service.ReviewService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,11 +34,14 @@ class ProviderControllerTest {
     @Mock
     private CategoryService categoryService;
 
+    @Mock
+    private ReviewService reviewService;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        ProviderController controller = new ProviderController(providerService, categoryService);
+        ProviderController controller = new ProviderController(providerService, categoryService, reviewService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
