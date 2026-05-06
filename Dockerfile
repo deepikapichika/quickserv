@@ -6,7 +6,8 @@ WORKDIR /app
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
 COPY src ./src
-RUN ./mvnw -DskipTests clean package -DskipITs || mvn -DskipTests clean package
+# Ensure the Maven wrapper is executable and build
+RUN chmod +x mvnw && ./mvnw -DskipTests clean package || mvn -DskipTests clean package
 
 # Stage 2 - runtime image
 FROM eclipse-temurin:17-jre
